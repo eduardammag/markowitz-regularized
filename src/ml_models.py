@@ -1,6 +1,5 @@
 from sklearn.linear_model import Lasso, Ridge, ElasticNet
 from sklearn.preprocessing import StandardScaler
-import numpy as np
 
 
 def train_model(X, y, model_type="lasso"):
