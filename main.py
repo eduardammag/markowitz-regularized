@@ -1,4 +1,10 @@
 import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from multiprocessing import Pool, cpu_count
+
 from config import *
 from src.data_loader import load_data
 from src.ml_models import predict_returns
@@ -10,15 +16,65 @@ from src.benchmarks import equal_weight_portfolio, ibov_returns
 from src.report import generate_report
 from src.stat_tests import diebold_mariano
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
+
+# =========================================
+# 🚀 FUNÇÃO PARALELA (1 experimento)
+# =========================================
+def run_single_experiment(args):
+    m, gamma, lambda_reg, returns = args
+
+    name = f"{m}_g{gamma}_l{lambda_reg}"
+    print(f"\n######## Modelo: {name} ########")
+
+    def model_wrapper(data):
+        return predict_returns(data, model_type=m)
+
+    portfolio_returns, preds, reals = run_backtest(
+        returns,
+        model_wrapper,
+        estimate_covariance,
+        lambda mu, cov: optimize_portfolio(mu, cov, lambda_reg, gamma),
+        config=__import__("config")
+    )
+
+    # =========================
+    # DEBUG (opcional)
+    # =========================
+    print(f"\n--- DEBUG {name} RETURNS ---")
+    print("Max:", np.max(portfolio_returns))
+    print("Min:", np.min(portfolio_returns))
+    print("Mean:", np.mean(portfolio_returns))
+
+    # =========================
+    # CUMULATIVO
+    # =========================
+    cum = np.cumprod(1 + portfolio_returns)
+
+    print(f"\n--- DEBUG {name} CUMULATIVO ---")
+    print("Final value:", cum[-1])
+
+    # =========================
+    # SALVAR
+    # =========================
+    pd.DataFrame(portfolio_returns).to_csv(f"output/{name}_returns.csv")
+    pd.DataFrame(cum).to_csv(f"output/{name}_cum.csv")
+
+    return name, {
+        "returns": portfolio_returns,
+        "mse": mse(reals, preds),
+        "mae": mae(reals, preds),
+        "direction": directional_accuracy(reals, preds),
+        "errors": (reals - preds).flatten()
+    }
 
 
+# =========================================
+# 🧠 MAIN
+# =========================================
 def main():
 
     # =========================
-    # 📁 Criar pasta output
+    # 📁 Criar pasta
     # =========================
     os.makedirs("output", exist_ok=True)
 
@@ -36,77 +92,23 @@ def main():
     # =========================
     # GRID SEARCH
     # =========================
-    results = {}
-
     models = ["lasso", "ridge", "elastic"]
     gammas = [1, 5, 10, 20]
     lambdas = [0.01, 0.1, 1]
 
-    for m in models:
-        for gamma in gammas:
-            for lambda_reg in lambdas:
+    tasks = [
+        (m, gamma, lambda_reg, returns)
+        for m in models
+        for gamma in gammas
+        for lambda_reg in lambdas
+    ]
 
-                name = f"{m}_g{gamma}_l{lambda_reg}"
-                print(f"\n######## Modelo: {name} ########")
+    print(f"\n🚀 Rodando em paralelo com {cpu_count()} CPUs...\n")
 
-                def model_wrapper(data):
-                    return predict_returns(data, model_type=m)
+    with Pool(cpu_count()) as pool:
+        outputs = pool.map(run_single_experiment, tasks)
 
-                portfolio_returns, preds, reals = run_backtest(
-                    returns,
-                    model_wrapper,
-                    estimate_covariance,
-                    lambda mu, cov: optimize_portfolio(mu, cov, lambda_reg, gamma),
-                    config=__import__("config")
-                )
-
-                # =========================
-                # DEBUG PORTFOLIO RETURNS
-                # =========================
-                print(f"\n--- DEBUG {name} RETURNS ---")
-                print("Max:", np.max(portfolio_returns))
-                print("Min:", np.min(portfolio_returns))
-                print("Mean:", np.mean(portfolio_returns))
-
-                if np.max(portfolio_returns) > 1:
-                    print("🚨 ALERTA: retorno > 100% em um período")
-
-                if np.min(portfolio_returns) < -1:
-                    print("🚨 ALERTA: retorno < -100% (impossível!)")
-
-                # =========================
-                # DEBUG PREDIÇÕES
-                # =========================
-                print(f"\n--- DEBUG {name} PREDIÇÕES ---")
-                print("Pred max:", np.max(preds))
-                print("Pred min:", np.min(preds))
-                print("Real max:", np.max(reals))
-                print("Real min:", np.min(reals))
-
-                # =========================
-                # CUMULATIVO
-                # =========================
-                cum = np.cumprod(1 + portfolio_returns)
-
-                print(f"\n--- DEBUG {name} CUMULATIVO ---")
-                print("Final value:", cum[-1])
-
-                if cum[-1] > 100:
-                    print("🚨 ALERTA: crescimento explosivo")
-
-                # =========================
-                # SALVAR
-                # =========================
-                pd.DataFrame(portfolio_returns).to_csv(f"output/{name}_returns.csv")
-                pd.DataFrame(cum).to_csv(f"output/{name}_cum.csv")
-
-                results[name] = {
-                    "returns": portfolio_returns,
-                    "mse": mse(reals, preds),
-                    "mae": mae(reals, preds),
-                    "direction": directional_accuracy(reals, preds),
-                    "errors": (reals - preds).flatten()
-                }
+    results = dict(outputs)
 
     # =========================
     # BENCHMARKS
@@ -124,7 +126,6 @@ def main():
     # =========================
     report = generate_report(results)
 
-    # ordenar por Sharpe
     report = report.sort_values(by="Sharpe", ascending=False)
 
     print("\n=== RESULTADOS ===")
@@ -133,7 +134,7 @@ def main():
     report.to_csv("output/results_summary.csv", index=False)
 
     # =========================
-    # GRÁFICO
+    # 📈 GRÁFICO
     # =========================
     plt.figure(figsize=(12, 7))
 
@@ -149,21 +150,27 @@ def main():
     plt.show()
 
     # =========================
-    # DIEBOLD-MARIANO (top modelos)
+    # 📊 DIEBOLD-MARIANO
     # =========================
     print("\n=== TESTE DIEBOLD-MARIANO ===")
 
     top_models = report["Model"].head(3).values
 
     for i in range(len(top_models)):
-        for j in range(i+1, len(top_models)):
+        for j in range(i + 1, len(top_models)):
             m1 = top_models[i]
             m2 = top_models[j]
 
             if "errors" in results[m1] and "errors" in results[m2]:
-                dm, p = diebold_mariano(results[m1]["errors"], results[m2]["errors"])
+                dm, p = diebold_mariano(
+                    results[m1]["errors"],
+                    results[m2]["errors"]
+                )
                 print(f"{m1} vs {m2}: DM={dm:.4f}, p-value={p:.4f}")
 
 
+# =========================================
+# ⚠️ IMPORTANTE (Windows)
+# =========================================
 if __name__ == "__main__":
     main()
