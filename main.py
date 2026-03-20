@@ -14,7 +14,6 @@ warnings.filterwarnings("ignore")
 
 # MAIN
 def main():
-
     returns = load_data(TICKERS, START_DATE, END_DATE)
 
     # GRID SEARCH (reduzido para performance)

@@ -1,5 +1,4 @@
 import yfinance as yf
-import pandas as pd
 
 def load_data(tickers, start, end):
     data = yf.download(tickers, start=start, end=end,  auto_adjust=True)
@@ -23,3 +22,6 @@ def load_data(tickers, start, end):
     returns = prices.pct_change().dropna()
 
     return returns
+
+
+# A função retorna um DataFrame de retornos de ativos por dia
