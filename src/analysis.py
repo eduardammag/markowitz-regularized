@@ -1,84 +1,87 @@
+
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
+# FUNÇÕES DE ANÁLISE
 
-# =========================
-# 📊 METRICAS FINANCEIRAS
-# =========================
-def sharpe_ratio(returns):
-    return np.mean(returns) / np.std(returns) * np.sqrt(252)
-
-
-def annual_return(returns):
-    return np.mean(returns) * 252
+def compute_drawdown(returns):
+    cum = np.cumprod(1 + returns)
+    peak = np.maximum.accumulate(cum)
+    return (cum - peak) / peak
 
 
-def annual_volatility(returns):
-    return np.std(returns) * np.sqrt(252)
+def plot_top_cumulative(results, report, top=5):
 
+    top_models = report["Model"].head(top)
 
-def max_drawdown(cumulative):
-    peak = np.maximum.accumulate(cumulative)
-    drawdown = (cumulative - peak) / peak
-    return drawdown.min()
+    plt.figure(figsize=(10,6))
 
-
-# =========================
-# 📊 GERAR RELATÓRIO
-# =========================
-def generate_performance_table(results):
-
-    rows = []
-
-    for name, data in results.items():
-
-        r = np.array(data["returns"])
-        cum = np.cumprod(1 + r)
-
-        rows.append({
-            "Model": name,
-            "Return": annual_return(r),
-            "Volatility": annual_volatility(r),
-            "Sharpe": sharpe_ratio(r),
-            "MaxDrawdown": max_drawdown(cum)
-        })
-
-    df = pd.DataFrame(rows)
-    df = df.sort_values("Sharpe", ascending=False)
-
-    return df
-
-
-# =========================
-# 📈 GRAFICO CAPITAL
-# =========================
-def plot_cumulative_returns(results):
-
-    plt.figure(figsize=(12,7))
-
-    for name, data in results.items():
-
-        r = np.array(data["returns"])
-        cum = np.cumprod(1 + r)
-
+    for name in top_models:
+        cum = np.cumprod(1 + results[name]["returns"])
         plt.plot(cum, label=name)
 
-    plt.title("Cumulative Portfolio Returns")
-    plt.xlabel("Time")
-    plt.ylabel("Portfolio Value")
-
+    plt.title("Top Estratégias - Retorno Cumulativo")
     plt.legend()
-    plt.grid(True)
-
-    plt.savefig("output/cumulative_returns.png")
-    plt.close()
+    plt.grid()
+    plt.show()
 
 
-# =========================
-# 📉 GRAFICO DRAWDOWN
-# =========================
-def plot_drawdowns(results):
+def plot_risk_return(results):
+
+    vols = []
+    rets = []
+    names = []
+
+    for name, data in results.items():
+
+        r = np.array(data["returns"])
+
+        vols.append(np.std(r))
+        rets.append(np.mean(r))
+        names.append(name)
+
+    plt.figure(figsize=(8,6))
+    plt.scatter(vols, rets)
+
+    for i, name in enumerate(names):
+        plt.annotate(name, (vols[i], rets[i]))
+
+    plt.xlabel("Volatilidade")
+    plt.ylabel("Retorno médio")
+    plt.title("Risk vs Return")
+    plt.grid()
+    plt.show()
+
+
+def plot_drawdowns(results, report, top=5):
+
+    top_models = report["Model"].head(top)
+
+    plt.figure(figsize=(10,6))
+
+    for name in top_models:
+
+        dd = compute_drawdown(results[name]["returns"])
+        plt.plot(dd, label=name)
+
+    plt.title("Drawdowns")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+def plot_return_boxplot(results, report, top=5):
+
+    top_models = report["Model"].head(top)
+
+    data = [results[m]["returns"] for m in top_models]
+
+    plt.figure(figsize=(8,6))
+    plt.boxplot(data, labels=top_models)
+    plt.title("Distribuição de Retornos")
+    plt.grid()
+    plt.show()
+
 
     plt.figure(figsize=(12,7))
 
