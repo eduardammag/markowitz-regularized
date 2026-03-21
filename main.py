@@ -4,7 +4,7 @@ from config import *
 from src.data_loader import load_data
 from src.benchmarks import equal_weight_portfolio, ibov_returns
 from src.report import generate_report
-from src.stat_tests import diebold_mariano
+from src.utils import diebold_mariano
 from src.analysis import plot_top_cumulative, plot_risk_return, plot_drawdowns, plot_return_boxplot
 from src.single_experiment import run_single_experiment
 
@@ -18,8 +18,8 @@ def main():
 
     # GRID SEARCH (reduzido para performance)
     models = ["lasso", "ridge", "elastic"]
-    gammas = [5, 10, 20]
-    lambdas = [0.01, 0.1, 1]
+    gammas = [1, 3, 5, 10, 20]
+    lambdas = [0.1, 1, 10, 15, 20]
 
     tasks = [
         (m, gamma, lambda_reg, returns)

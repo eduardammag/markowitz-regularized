@@ -1,106 +1,144 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
+from utils import get_model_types, filter_models, save_plot, compute_drawdown
 
-# FUNÇÕES DE ANÁLISE
-
-def compute_drawdown(returns):
-    cum = np.cumprod(1 + returns)
-    peak = np.maximum.accumulate(cum)
-    return (cum - peak) / peak
-
-
+# =========================
+# 1. CUMULATIVE RETURNS
+# =========================
 def plot_top_cumulative(results, report, top=5):
 
-    top_models = report["Model"].head(top)
+    model_types = get_model_types(results)
 
-    plt.figure(figsize=(10,6))
+    for model_type in model_types:
 
-    for name in top_models:
-        cum = np.cumprod(1 + results[name]["returns"])
-        plt.plot(cum, label=name)
+        filtered = filter_models(results, model_type)
+        top_models = [m for m in report["Model"] if m in filtered][:top]
 
-    plt.title("Top Estratégias - Retorno Cumulativo")
+        if not top_models:
+            continue
+
+        fig = plt.figure(figsize=(10, 6))
+
+        for name in top_models:
+            r = np.array(results[name]["returns"])
+            cum = np.cumprod(1 + r)
+            plt.plot(cum, label=name)
+
+        plt.title(f"{model_type.upper()} - Retorno Cumulativo")
+        plt.legend()
+        plt.grid()
+
+        save_plot(fig, f"{model_type}.png", "cumulative")
+
+    # 🔥 comparação final (melhores modelos + benchmarks)
+    fig = plt.figure(figsize=(12, 7))
+
+    best_models = []
+    for model_type in model_types:
+        best = next((m for m in report["Model"] if m.startswith(model_type)), None)
+        if best:
+            best_models.append(best)
+
+    selected = best_models + ["equal_weight", "ibov"]
+
+    for name in selected:
+        if name in results:
+            r = np.array(results[name]["returns"])
+            cum = np.cumprod(1 + r)
+            plt.plot(cum, label=name)
+
+    plt.title("Melhores Modelos vs Benchmarks")
     plt.legend()
     plt.grid()
-    plt.show()
+
+    save_plot(fig, "best_comparison.png", "comparison")
 
 
+# =========================
+# 2. RISK vs RETURN
+# =========================
 def plot_risk_return(results):
 
-    vols = []
-    rets = []
-    names = []
+    model_types = get_model_types(results)
 
-    for name, data in results.items():
+    for model_type in model_types:
 
-        r = np.array(data["returns"])
+        filtered = filter_models(results, model_type)
 
-        vols.append(np.std(r))
-        rets.append(np.mean(r))
-        names.append(name)
+        vols, rets, names = [], [], []
 
-    plt.figure(figsize=(8,6))
-    plt.scatter(vols, rets)
+        for name, data in filtered.items():
+            r = np.array(data["returns"])
+            vols.append(np.std(r))
+            rets.append(np.mean(r))
+            names.append(name)
 
-    for i, name in enumerate(names):
-        plt.annotate(name, (vols[i], rets[i]))
+        if not names:
+            continue
 
-    plt.xlabel("Volatilidade")
-    plt.ylabel("Retorno médio")
-    plt.title("Risk vs Return")
-    plt.grid()
-    plt.show()
+        fig = plt.figure(figsize=(8, 6))
+        plt.scatter(vols, rets)
+
+        for i, name in enumerate(names):
+            plt.annotate(name, (vols[i], rets[i]))
+
+        plt.xlabel("Volatilidade")
+        plt.ylabel("Retorno médio")
+        plt.title(f"{model_type.upper()} - Risk vs Return")
+        plt.grid()
+
+        save_plot(fig, f"{model_type}.png", "risk_return")
 
 
+# =========================
+# 3. DRAWDOWN
+# =========================
 def plot_drawdowns(results, report, top=5):
 
-    top_models = report["Model"].head(top)
+    model_types = get_model_types(results)
 
-    plt.figure(figsize=(10,6))
+    for model_type in model_types:
 
-    for name in top_models:
+        filtered = filter_models(results, model_type)
+        top_models = [m for m in report["Model"] if m in filtered][:top]
 
-        dd = compute_drawdown(results[name]["returns"])
-        plt.plot(dd, label=name)
+        if not top_models:
+            continue
 
-    plt.title("Drawdowns")
-    plt.legend()
-    plt.grid()
-    plt.show()
+        fig = plt.figure(figsize=(10, 6))
+
+        for name in top_models:
+            dd = compute_drawdown(results[name]["returns"])
+            plt.plot(dd, label=name)
+
+        plt.title(f"{model_type.upper()} - Drawdown")
+        plt.legend()
+        plt.grid()
+
+        save_plot(fig, f"{model_type}.png", "drawdown")
 
 
+# =========================
+# 4. BOXPLOT
+# =========================
 def plot_return_boxplot(results, report, top=5):
 
-    top_models = report["Model"].head(top)
+    model_types = get_model_types(results)
 
-    data = [results[m]["returns"] for m in top_models]
+    for model_type in model_types:
 
-    plt.figure(figsize=(8,6))
-    plt.boxplot(data, labels=top_models)
-    plt.title("Distribuição de Retornos")
-    plt.grid()
-    plt.show()
+        filtered = filter_models(results, model_type)
+        top_models = [m for m in report["Model"] if m in filtered][:top]
 
+        if not top_models:
+            continue
 
-    plt.figure(figsize=(12,7))
+        data = [results[m]["returns"] for m in top_models]
 
-    for name, data in results.items():
+        fig = plt.figure(figsize=(8, 6))
+        plt.boxplot(data, labels=top_models)
 
-        r = np.array(data["returns"])
-        cum = np.cumprod(1 + r)
+        plt.title(f"{model_type.upper()} - Distribuição de Retornos")
+        plt.grid()
 
-        peak = np.maximum.accumulate(cum)
-        drawdown = (cum - peak) / peak
-
-        plt.plot(drawdown, label=name)
-
-    plt.title("Drawdown Comparison")
-    plt.xlabel("Time")
-    plt.ylabel("Drawdown")
-
-    plt.legend()
-    plt.grid(True)
-
-    plt.savefig("output/drawdowns.png")
-    plt.close()
+        save_plot(fig, f"{model_type}.png", "boxplot")
