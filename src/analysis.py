@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import get_model_types, filter_models, save_plot, compute_drawdown
+from src.utils import get_model_types, filter_models, save_plot, compute_drawdown
 
 # =========================
 # 1. CUMULATIVE RETURNS

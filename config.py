@@ -1,8 +1,6 @@
 import os 
 
-# =========================
 # PATH OUTPUT
-# =========================
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -13,8 +11,8 @@ TICKERS = [
     "BBDC4.SA", "ABEV3.SA"
 ]
 
-START_DATE = "2020-01-01"
-END_DATE = "2024-01-01"
+START_DATE = "2005-01-31"
+END_DATE = "2009-01-31"
 
 TRAIN_WINDOW = 252 * 2
 TEST_WINDOW = 21

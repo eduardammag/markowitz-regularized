@@ -5,3 +5,4 @@ yfinance
 cvxpy
 matplotlib
 tqdm
+pyarrow

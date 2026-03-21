@@ -28,7 +28,7 @@ def main():
         for lambda_reg in lambdas
     ]
 
-    with Pool(3) as pool:
+    with Pool(4) as pool:
         outputs = pool.map(run_single_experiment, tasks)
 
     results = dict(outputs)

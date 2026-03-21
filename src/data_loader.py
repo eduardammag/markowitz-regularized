@@ -1,27 +1,50 @@
+import os
+import pandas as pd
 import yfinance as yf
+import hashlib
 
-def load_data(tickers, start, end):
-    data = yf.download(tickers, start=start, end=end,  auto_adjust=True)
+def _generate_cache_name(tickers, start, end):
+    tickers_str = "_".join(sorted(tickers))
+    key = f"{tickers_str}_{start}_{end}"
+    hash_key = hashlib.md5(key.encode()).hexdigest()[:8]
+    return f"data/cache_{hash_key}.parquet"
 
-    # Seleciona preços (preferência por Adj Close)
-    price_type = "Adj Close" if "Adj Close" in data.columns.levels[0] else "Close"
+
+def load_data(tickers, start, end, force_download=False):
     
-    if price_type != "Adj Close":
-        print(" 'Adj Close' não encontrado. Usando 'Close'.")
+    cache_path = _generate_cache_name(tickers, start, end)
 
-    # Extrai apenas preços (remove MultiIndex nível 'Price')
-    prices = data[price_type].copy()
+    # =========================
+    # LOAD CACHE
+    # =========================
+    if os.path.exists(cache_path) and not force_download:
+        print(f"📂 Carregando cache: {cache_path}")
+        prices = pd.read_parquet(cache_path)
 
-    # Remove colunas vazias (ativos que falharam)
-    prices = prices.dropna(axis=1, how="all")
+    else:
+        print("🌐 Baixando dados do Yahoo Finance...")
+        data = yf.download(tickers, start=start, end=end, auto_adjust=True)
 
-    # Preenche buracos e alinha séries
-    prices = prices.ffill().dropna()
+        price_type = "Adj Close" if "Adj Close" in data.columns.levels[0] else "Close"
 
-    # Retornos
+        if price_type != "Adj Close":
+            print("⚠️ 'Adj Close' não encontrado. Usando 'Close'.")
+
+        prices = data[price_type].copy()
+
+        prices = prices.dropna(axis=1, how="all")
+        prices = prices.ffill().dropna()
+
+        # =========================
+        # SAVE CACHE
+        # =========================
+        os.makedirs("data", exist_ok=True)
+        prices.to_parquet(cache_path)
+        print(f"💾 Cache salvo em: {cache_path}")
+
+    # =========================
+    # RETURNS
+    # =========================
     returns = prices.pct_change().dropna()
 
     return returns
-
-
-# A função retorna um DataFrame de retornos de ativos por dia
