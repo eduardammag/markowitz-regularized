@@ -24,7 +24,7 @@ def run_single_experiment(args):
         return predict_returns(data, model_type=m)
 
     print("[DEBUG] Iniciando backtest...")
-    portfolio_returns, preds, reals, weights_history = run_backtest(
+    portfolio_returns, preds, reals, weights_history, dates = run_backtest(
         returns,
         model_wrapper,
         estimate_covariance,
@@ -33,9 +33,7 @@ def run_single_experiment(args):
     )
     print("[DEBUG] Backtest concluído.")
 
-    # =========================
     # MÉTRICAS
-    # =========================
     print("[DEBUG] Calculando métricas...")
 
     result = {
@@ -50,7 +48,7 @@ def run_single_experiment(args):
         "sortino": sortino_ratio(portfolio_returns),
         "calmar": calmar_ratio(portfolio_returns),
         "turnover": turnover(weights_history),
-
+        "dates": dates,
         "errors": (reals - preds).flatten()
     }
 

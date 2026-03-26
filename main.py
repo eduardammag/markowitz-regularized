@@ -8,6 +8,7 @@ from src.utils import diebold_mariano
 from src.analysis import plot_top_cumulative, plot_risk_return, plot_drawdowns, plot_return_boxplot
 from src.single_experiment import run_single_experiment
 
+import numpy as np
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -57,14 +58,22 @@ def main():
     ibov = ibov_returns(START_DATE, END_DATE)
 
     # Adiciona benchmarks aos resultados
-    results["equal_weight"] = {"returns": eq.values}
-    results["ibov"] = {"returns": ibov.values}
+    results["equal_weight"] = {
+        "returns": np.array(eq["returns"]),
+        "dates": np.array(eq["dates"])  # mesmo comprimento que returns
+    }
 
+    results["ibov"] = {
+        "returns": np.array(ibov["returns"]),
+        "dates": np.array(ibov["dates"])
+    }
     print("[DEBUG] Benchmarks adicionados.")
 
     # REPORT
     print("[DEBUG] Gerando relatório de performance...")
-
+    for name, data in results.items():
+        returns = data["returns"]
+        print(name, type(returns))
     # Gera relatório consolidado
     report = generate_report(results)
 

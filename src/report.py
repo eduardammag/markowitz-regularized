@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from src.utils import sharpe_ratio, max_drawdown
 
-
 def generate_report(results_dict):
 
     print("[DEBUG] Gerando relatório consolidado...")
@@ -17,6 +16,21 @@ def generate_report(results_dict):
 
         # Série de retornos do modelo
         returns = data["returns"]
+
+        # Se for uma função, chamamos para obter os dados
+        if callable(returns):
+            print(f"[DEBUG] returns é função, chamando...")
+            returns = returns()
+
+        # Confirma que agora returns é numérico
+        if not isinstance(returns, (pd.Series, np.ndarray, list)):
+            raise ValueError(f"[ERROR] returns do modelo '{name}' não é numérico!")
+
+        # Converte para numpy array (opcional, mas garante consistência)
+        returns = np.array(returns)
+
+        # Debug rápido: mostra os 5 primeiros retornos
+        print(f"[DEBUG] type(returns) = {type(returns)}, first 5 = {returns[:5]}")
 
         # MÉTRICAS PRINCIPAIS
         row = {

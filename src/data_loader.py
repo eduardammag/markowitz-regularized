@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import yfinance as yf
 import hashlib
-
+from config import END_DATE, START_DATE, TEST_WINDOW, TRAIN_WINDOW, TICKERS
 
 # Função interna para gerar um nome único de arquivo de cache
 def _generate_cache_name(tickers, start, end):
@@ -78,3 +78,4 @@ def load_data(tickers, start, end, force_download=False):
     print(f"[DEBUG] Retornos calculados: {returns.shape}")
 
     return returns
+

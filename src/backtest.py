@@ -17,7 +17,7 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
     preds_all = []          # previsões do modelo
     reals_all = []          # valores reais
     weights_history = []
-
+    dates = [] 
     # Variável para armazenar pesos do período anterior (para custo de transação)
     prev_weights = None
 
@@ -34,7 +34,8 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
 
         # Janela de teste (período futuro)
         test = returns.iloc[i:i + test_window]
-
+        date = test.index[-1]  
+        dates.append(date)
         # PREVISÃO
         # Gera previsão de retorno esperado
         mu_pred = model_fn(train)
@@ -83,5 +84,6 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
         np.array(portfolio_returns),
         np.array(preds_all),
         np.array(reals_all),
-        np.array(weights_history)
+        np.array(weights_history),
+        np.array(dates) 
     )

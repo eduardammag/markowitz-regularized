@@ -9,10 +9,10 @@ from config import OUTPUT_DIR
 def sharpe_ratio(returns, rf=0.02):
     print("[DEBUG] Calculando Sharpe Ratio...")
 
-    # Calcula excesso de retorno diário (taxa livre anual -> diária)
-    excess = returns - rf/252
+    if callable(returns):
+        raise ValueError("returns é uma função — você esqueceu de chamar com ()")
 
-    # Retorno médio dividido pela volatilidade
+    excess = returns - rf/252
     value = np.sqrt(252) * np.mean(excess) / np.std(excess)
 
     return value

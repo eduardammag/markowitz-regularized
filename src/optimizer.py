@@ -8,8 +8,7 @@ def optimize_portfolio(mu, cov, lambda_reg=0.1, gamma=10):
 
     # Número de ativos
     n = len(mu)
-    print(f"[DEBUG] Número de ativos: {n}")
-
+    
     # ESTABILIDADE NUMÉRICA
     # Adiciona pequeno valor na diagonal para evitar problemas de inversão/matriz singular
     cov = cov + 1e-6 * np.eye(n)
