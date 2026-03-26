@@ -22,12 +22,6 @@ def main():
     returns = load_data(TICKERS, START_DATE, END_DATE)
     print(f"[DEBUG] Dados carregados: {returns.shape}")
 
-    # GRID SEARCH (reduzido para performance)
-    print("[DEBUG] Definindo parâmetros do grid search...")
-    models = ["lasso", "ridge", "elastic"]  # Tipos de modelos
-    gammas = [1, 3, 5, 10, 20]              # Parâmetro gamma
-    lambdas = [0.1, 1, 10, 20]              # Parâmetro de regularização
-
     # Cria lista de tarefas combinando todos os parâmetros
     print("[DEBUG] Criando lista de tarefas...")
     tasks = [

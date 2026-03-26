@@ -16,7 +16,7 @@ TICKERS = ["PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "ABEV3.SA"]
 START_DATE = "2020-01-31"
 
 # Data final da análise
-END_DATE = "2025-01-31"
+END_DATE = "2026-01-31"
 
 # Janela de treino (aproximadamente 1 anos de pregão)
 TRAIN_WINDOW = 252
@@ -29,3 +29,12 @@ RISK_FREE_RATE = 0.02
 
 # Parâmetro de regularização para otimização de portfólio (Markowitz)
 LAMBDA_REG = 0.1  # regularização Markowitz
+
+# Modelos
+models = ["lasso", "ridge", "elastic"]
+
+# Gamma: pequena, média e grande
+gammas = [0.1, 0.5, 1, 2, 3, 5, 10, 20, 50, 100]
+
+# Lambda: pequena, média e grande
+lambdas = [0.01, 0.05, 0.1, 0.5, 1, 5, 10, 20, 50, 100]

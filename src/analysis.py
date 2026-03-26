@@ -1,89 +1,86 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from src.utils import get_model_types, filter_models, save_plot, compute_drawdown
 
+sns.set_style("whitegrid")
+palette = sns.color_palette("tab10")
 
-# Função auxiliar (padroniza alinhamento)
+
+# Função auxiliar para alinhar datas e retornos
 def _align_data(data):
     r = np.array(data["returns"])
     dates = np.array(data["dates"])
 
-    # Converte datas se necessário
     try:
         dates = pd.to_datetime(dates)
     except:
         pass
 
-    # Garante mesmo tamanho
     min_len = min(len(r), len(dates))
     return r[-min_len:], dates[-min_len:]
 
 
 # 1. CUMULATIVE RETURNS
 def plot_top_cumulative(results, report, top=5):
-
     print("[DEBUG] Gerando gráficos de retorno cumulativo...")
 
     model_types = get_model_types(results)
 
     for model_type in model_types:
-
         print(f"[DEBUG] Processando tipo: {model_type}")
 
         filtered = filter_models(results, model_type)
-        top_models = [m for m in report["Model"] if m in filtered][:top]
+        top_models = [name for name in filtered.keys() if name in results][:top]
 
         if not top_models:
             print(f"[DEBUG] Nenhum modelo encontrado para {model_type}")
             continue
 
-        fig = plt.figure(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-        for name in top_models:
+        for idx, name in enumerate(top_models):
             r, dates = _align_data(results[name])
             cum = np.cumprod(1 + r)
+            ax.plot(dates, cum, label=name, color=palette[idx % len(palette)], linewidth=2)
 
-            plt.plot(dates, cum, label=name)
-
-        plt.title(f"{model_type.upper()} - Retorno Cumulativo")
-        plt.legend()
-        plt.grid()
+        ax.set_title(f"{model_type.upper()} - Retorno Cumulativo", fontsize=16)
+        ax.set_xlabel("Data", fontsize=12)
+        ax.set_ylabel("Retorno Acumulado", fontsize=12)
+        ax.legend()
+        ax.grid(True, alpha=0.5)
         plt.xticks(rotation=45)
         plt.tight_layout()
 
         save_plot(fig, f"{model_type}.png", "cumulative")
 
-    # comparação final
+    # Comparação final: melhores modelos vs benchmarks
     print("[DEBUG] Gerando comparação final entre melhores modelos...")
-
-    fig = plt.figure(figsize=(12, 7))
+    fig, ax = plt.subplots(figsize=(14, 7))
 
     best_models = []
-
     for model_type in model_types:
         filtered = filter_models(results, model_type)
-        best = next((m for m in report["Model"] if m in filtered), None)
-
-        if best:
+        if filtered:
+            # Melhor modelo pelo retorno acumulado
+            best = max(filtered.items(), key=lambda x: np.prod(1 + np.array(x[1]["returns"])))[0]
             best_models.append(best)
 
     benchmarks = ["equal_weight", "ibov"]
-    selected = best_models + benchmarks
+    selected = best_models + [b for b in benchmarks if b in results]
 
-    for name in selected:
-        if name in results:
-            r, dates = _align_data(results[name])
-            cum = np.cumprod(1 + r)
+    for idx, name in enumerate(selected):
+        r, dates = _align_data(results[name])
+        cum = np.cumprod(1 + r)
+        ax.plot(dates, cum, label=name, color=palette[idx % len(palette)], linewidth=2)
 
-            plt.plot(dates, cum, label=name)
-        else:
-            print(f"{name} não encontrado em results")
-
-    plt.title("Melhores Modelos vs Benchmarks")
-    plt.legend()
-    plt.grid()
+    ax.set_title("Melhores Modelos vs Benchmarks", fontsize=16)
+    ax.set_xlabel("Data", fontsize=12)
+    ax.set_ylabel("Retorno Acumulado", fontsize=12)
+    ax.legend()
+    ax.grid(True, alpha=0.5)
     plt.xticks(rotation=45)
     plt.tight_layout()
 
@@ -92,13 +89,11 @@ def plot_top_cumulative(results, report, top=5):
 
 # 2. RISK vs RETURN
 def plot_risk_return(results):
-
     print("[DEBUG] Gerando gráficos Risk vs Return...")
 
     model_types = get_model_types(results)
 
     for model_type in model_types:
-
         filtered = filter_models(results, model_type)
 
         vols, rets, names = [], [], []
@@ -113,17 +108,16 @@ def plot_risk_return(results):
             print(f"[DEBUG] Nenhum dado para {model_type}")
             continue
 
-        fig = plt.figure(figsize=(8, 6))
-
-        plt.scatter(vols, rets)
+        fig, ax = plt.subplots(figsize=(10, 6))
+        scatter = ax.scatter(vols, rets, s=100, c=range(len(names)), cmap='tab10')
 
         for i, name in enumerate(names):
-            plt.annotate(name, (vols[i], rets[i]))
+            ax.annotate(name, (vols[i], rets[i]), textcoords="offset points", xytext=(5, 5))
 
-        plt.xlabel("Volatilidade")
-        plt.ylabel("Retorno médio")
-        plt.title(f"{model_type.upper()} - Risk vs Return")
-        plt.grid()
+        ax.set_title(f"{model_type.upper()} - Risco vs Retorno", fontsize=16)
+        ax.set_xlabel("Volatilidade", fontsize=12)
+        ax.set_ylabel("Retorno Médio", fontsize=12)
+        ax.grid(True, alpha=0.5)
         plt.tight_layout()
 
         save_plot(fig, f"{model_type}.png", "risk_return")
@@ -131,31 +125,30 @@ def plot_risk_return(results):
 
 # 3. DRAWDOWN
 def plot_drawdowns(results, report, top=5):
-
     print("[DEBUG] Gerando gráficos de drawdown...")
 
     model_types = get_model_types(results)
 
     for model_type in model_types:
-
         filtered = filter_models(results, model_type)
-        top_models = [m for m in report["Model"] if m in filtered][:top]
+        top_models = [name for name in filtered.keys() if name in results][:top]
 
         if not top_models:
             print(f"[DEBUG] Nenhum modelo para drawdown em {model_type}")
             continue
 
-        fig = plt.figure(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-        for name in top_models:
+        for idx, name in enumerate(top_models):
             r, dates = _align_data(results[name])
             dd = compute_drawdown(r)
+            ax.plot(dates, dd, label=name, color=palette[idx % len(palette)], linewidth=2)
 
-            plt.plot(dates, dd, label=name)
-
-        plt.title(f"{model_type.upper()} - Drawdown")
-        plt.legend()
-        plt.grid()
+        ax.set_title(f"{model_type.upper()} - Drawdown", fontsize=16)
+        ax.set_xlabel("Data", fontsize=12)
+        ax.set_ylabel("Drawdown", fontsize=12)
+        ax.legend()
+        ax.grid(True, alpha=0.5)
         plt.xticks(rotation=45)
         plt.tight_layout()
 
@@ -164,15 +157,13 @@ def plot_drawdowns(results, report, top=5):
 
 # 4. BOXPLOT
 def plot_return_boxplot(results, report, top=5):
-
     print("[DEBUG] Gerando boxplots de retornos...")
 
     model_types = get_model_types(results)
 
     for model_type in model_types:
-
         filtered = filter_models(results, model_type)
-        top_models = [m for m in report["Model"] if m in filtered][:top]
+        top_models = [name for name in filtered.keys() if name in results][:top]
 
         if not top_models:
             print(f"[DEBUG] Nenhum modelo para boxplot em {model_type}")
@@ -180,12 +171,18 @@ def plot_return_boxplot(results, report, top=5):
 
         data = [results[m]["returns"] for m in top_models]
 
-        fig = plt.figure(figsize=(8, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        bp = ax.boxplot(data, labels=top_models, patch_artist=True)
 
-        plt.boxplot(data, labels=top_models)
+        for patch, color in zip(bp['boxes'], palette):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.5)
 
-        plt.title(f"{model_type.upper()} - Distribuição de Retornos")
-        plt.grid()
+        ax.set_title(f"{model_type.upper()} - Distribuição de Retornos", fontsize=16)
+        ax.set_xlabel("Modelos", fontsize=12)
+        ax.set_ylabel("Retornos", fontsize=12)
+        ax.grid(True, alpha=0.5)
+        plt.xticks(rotation=45)
         plt.tight_layout()
 
         save_plot(fig, f"{model_type}.png", "boxplot")
