@@ -1,0 +1,431 @@
+\documentclass[12pt]{report}
+
+% ------------------------------------------------
+% PACOTES
+% ------------------------------------------------
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{setspace}
+
+\onehalfspacing
+
+% ------------------------------------------------
+% INFORMAÇÕES DO TRABALHO
+% ------------------------------------------------
+
+\title{Alocação Adaptativa de Portfólio Utilizando Aprendizado de Máquina e Otimização Média-Variância}
+\author{Maria Eduarda Mesquita Magalhães}
+\date{2026}
+
+% ------------------------------------------------
+% DOCUMENTO
+% ------------------------------------------------
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+% =================================================
+% 1 INTRODUÇÃO
+% =================================================
+
+\chapter{Introdução}
+
+\section{Motivação}
+
+A alocação de portfólio é um problema central em finanças quantitativas. Os investidores buscam distribuir seu capital entre diferentes ativos de forma a equilibrar retorno esperado e risco.
+
+Ao longo das últimas décadas, a gestão de investimentos passou por transformações significativas impulsionadas pelo avanço dos métodos quantitativos e das técnicas computacionais. Em particular, os modelos de aprendizado de máquina têm sido cada vez mais utilizados nos mercados financeiros para melhorar previsões e apoiar processos de tomada de decisão.
+
+Apesar desses avanços, muitas técnicas de construção de portfólio ainda se baseiam em estruturas clássicas, como a Teoria Moderna do Portfólio proposta por Harry Markowitz.
+
+\section{Teoria Moderna do Portfólio}
+
+A Teoria Moderna do Portfólio (Modern Portfolio Theory -- MPT), introduzida por Harry Markowitz, fornece uma estrutura matemática para construir portfólios que maximizem o retorno esperado para um determinado nível de risco.
+
+O problema clássico de otimização média-variância é definido por:
+
+\begin{equation}
+\min_w w^T \Sigma w
+\end{equation}
+
+sujeito a:
+
+\begin{equation}
+w^T \mu = \mu_p
+\end{equation}
+
+onde:
+
+\begin{itemize}
+\item $w$ representa o vetor de pesos do portfólio;
+\item $\Sigma$ é a matriz de covariância dos retornos dos ativos;
+\item $\mu$ é o vetor de retornos esperados;
+\item $\mu_p$ é o retorno alvo do portfólio.
+\end{itemize}
+
+\section{Problema de Pesquisa}
+
+Embora a otimização média-variância seja teoricamente elegante, seu desempenho depende fortemente da qualidade das estimativas dos retornos esperados e das covariâncias.
+
+Isso leva à questão central deste trabalho:
+
+\textit{Modelos de aprendizado de máquina podem melhorar a alocação de portfólio em relação à otimização média-variância tradicional?}
+
+\section{Contribuição}
+
+Esta dissertação propõe uma estrutura híbrida que combina modelos de aprendizado de máquina com técnicas clássicas de otimização de portfólio.
+
+O pipeline proposto consiste em:
+
+\begin{enumerate}
+\item Utilizar modelos de aprendizado de máquina para prever retornos esperados dos ativos;
+\item Estimar a matriz de covariância dos retornos;
+\item Aplicar a otimização média-variância para determinar os pesos do portfólio;
+\item Comparar o desempenho com métodos tradicionais de alocação.
+\end{enumerate}
+
+\newpage
+
+% =================================================
+% 2 REVISÃO DA LITERATURA
+% =================================================
+
+\chapter{Revisão da Literatura}
+
+\section{Teoria Clássica de Portfólios}
+
+A otimização média-variância representa uma das estruturas mais influentes da economia financeira. Ela formaliza a relação entre risco e retorno por meio do conceito de fronteira eficiente.
+
+A fronteira eficiente representa o conjunto de portfólios que alcançam o maior retorno esperado para um determinado nível de risco.
+
+\section{Índice de Sharpe e CAPM}
+
+William F. Sharpe introduziu o Índice de Sharpe como uma medida de retorno ajustado ao risco:
+
+\begin{equation}
+S = \frac{R_p - R_f}{\sigma_p}
+\end{equation}
+
+onde:
+
+\begin{itemize}
+\item $R_p$ representa o retorno do portfólio;
+\item $R_f$ representa a taxa livre de risco;
+\item $\sigma_p$ representa a volatilidade do portfólio.
+\end{itemize}
+
+O Modelo de Precificação de Ativos Financeiros (CAPM) estende essas ideias ao relacionar retornos esperados ao risco sistemático de mercado.
+
+\section{Limitações da Otimização Média-Variância}
+
+Apesar de sua elegância teórica, a abordagem de Markowitz apresenta diversas limitações.
+
+\subsection{Erro de Estimação}
+
+Os retornos esperados são notoriamente difíceis de estimar. Pequenos erros podem gerar grandes mudanças nos pesos ótimos dos ativos.
+
+\subsection{Sobreajuste (Overfitting)}
+
+A otimização pode amplificar ruídos estatísticos presentes nos dados, produzindo alocações extremas e pouco robustas.
+
+\subsection{Instabilidade das Matrizes de Covariância}
+
+As correlações entre ativos variam ao longo do tempo, tornando a estimação da matriz de covariância instável.
+
+\subsection{Distribuições Não Normais}
+
+Os retornos financeiros frequentemente apresentam assimetria e caudas pesadas, violando a hipótese de normalidade assumida em muitos modelos clássicos.
+
+\newpage
+
+% =================================================
+% 3 APRENDIZADO DE MÁQUINA EM FINANÇAS
+% =================================================
+
+\chapter{Aprendizado de Máquina em Finanças}
+
+As técnicas de aprendizado de máquina têm recebido crescente atenção em aplicações financeiras, incluindo previsão de retornos, modelagem de risco e seleção de ativos.
+
+\section{Aprendizado Supervisionado}
+
+No aprendizado supervisionado, os modelos são treinados utilizando dados históricos compostos por variáveis explicativas e variáveis-alvo.
+
+Fluxo típico:
+
+\begin{itemize}
+\item Conjunto de treinamento;
+\item Conjunto de validação;
+\item Conjunto de teste.
+\end{itemize}
+
+\section{Modelos}
+
+Diversos modelos podem ser utilizados para tarefas de previsão financeira.
+
+\subsection{Modelos Lineares}
+
+\begin{itemize}
+\item Regressão Linear;
+\item Regressão Ridge;
+\item Regressão Lasso.
+\end{itemize}
+
+\subsection{Modelos Não Lineares}
+
+\begin{itemize}
+\item Random Forest;
+\item Gradient Boosting.
+\end{itemize}
+
+\subsection{Aprendizado Profundo}
+
+\begin{itemize}
+\item Redes Neurais;
+\item Redes Long Short-Term Memory (LSTM).
+\end{itemize}
+
+\newpage
+
+% =================================================
+% 4 METODOLOGIA
+% =================================================
+
+\chapter{Metodologia}
+
+\section{Dados}
+
+A base de dados consiste em informações históricas de um conjunto de ativos financeiros.
+
+Possível universo de ativos:
+
+\begin{itemize}
+\item Ações do mercado brasileiro (IBOVESPA);
+\item ETFs globais.
+\end{itemize}
+
+As fontes de dados incluem:
+
+\begin{itemize}
+\item Yahoo Finance;
+\item Kaggle;
+\item Quandl.
+\end{itemize}
+
+O período amostral considerado neste estudo compreende os anos de 2010 a 2024.
+
+\section{Engenharia de Atributos}
+
+Diversas variáveis financeiras são construídas para alimentar os modelos de aprendizado de máquina.
+
+Exemplos:
+
+\begin{itemize}
+\item Retornos passados;
+\item Momentum de 1, 3 e 12 meses;
+\item Volatilidade móvel;
+\item Indicadores técnicos (RSI e médias móveis);
+\item Variáveis macroeconômicas.
+\end{itemize}
+
+\section{Modelos de Aprendizado de Máquina}
+
+O objetivo dos modelos é prever retornos futuros esperados:
+
+\begin{equation}
+E[r_{i,t+1}]
+\end{equation}
+
+Os seguintes modelos são avaliados:
+
+\begin{itemize}
+\item Regressão Linear;
+\item Random Forest;
+\item Gradient Boosting.
+\end{itemize}
+
+\section{Construção do Portfólio}
+
+O processo de construção do portfólio consiste em três etapas principais:
+
+\begin{enumerate}
+\item Previsão dos retornos esperados por meio de aprendizado de máquina;
+\item Estimação da matriz de covariância;
+\item Resolução do problema de otimização de Markowitz.
+\end{enumerate}
+
+Uma formulação possível consiste em maximizar o Índice de Sharpe:
+
+\begin{equation}
+\max_w \frac{w^T \hat{\mu}}
+{\sqrt{w^T \Sigma w}}
+\end{equation}
+
+\section{Estratégia de Backtesting}
+
+Uma abordagem de janela móvel (rolling window) é utilizada para avaliação fora da amostra.
+
+Exemplo:
+
+\begin{itemize}
+\item Período de treinamento: 2010--2016;
+\item Período de teste: 2017.
+\end{itemize}
+
+A janela é então deslocada ao longo do tempo.
+
+\newpage
+
+% =================================================
+% 5 AVALIAÇÃO DE DESEMPENHO
+% =================================================
+
+\chapter{Avaliação de Desempenho}
+
+A estratégia proposta é comparada com diferentes portfólios de referência.
+
+\section{Benchmarks}
+
+\begin{itemize}
+\item Portfólio igualmente ponderado;
+\item Portfólio clássico de Markowitz;
+\item Portfólio Aprendizado de Máquina + Markowitz.
+\end{itemize}
+
+\section{Métricas de Avaliação}
+
+\subsection{Índice de Sharpe}
+
+\begin{equation}
+S = \frac{R_p - R_f}{\sigma_p}
+\end{equation}
+
+\subsection{Máximo Drawdown}
+
+O máximo drawdown mede a maior perda acumulada entre um pico e um vale durante o período analisado.
+
+\subsection{Retorno Acumulado}
+
+Representa o crescimento total do portfólio ao longo do horizonte de investimento.
+
+\subsection{Volatilidade}
+
+Medida pelo desvio-padrão dos retornos do portfólio.
+
+\newpage
+
+% =================================================
+% 6 RESULTADOS EMPÍRICOS
+% =================================================
+
+\chapter{Resultados Empíricos}
+
+Esta seção apresenta os resultados obtidos nos experimentos de backtesting.
+
+\section{Fronteira Eficiente}
+
+Inserir gráfico da fronteira eficiente.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{efficient_frontier.png}
+\caption{Fronteira Eficiente}
+\end{figure}
+
+\section{Retornos Acumulados}
+
+Inserir gráfico de retornos acumulados.
+
+\section{Tabela de Desempenho}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+Modelo & Índice de Sharpe & Volatilidade \\
+\midrule
+Pesos Iguais & 0.70 & 0.18 \\
+Markowitz & 0.80 & 0.16 \\
+Aprendizado de Máquina + Markowitz & 1.10 & 0.15 \\
+\bottomrule
+\end{tabular}
+\caption{Comparação de desempenho}
+\end{table}
+
+\newpage
+
+% =================================================
+% 7 TESTES DE ROBUSTEZ
+% =================================================
+
+\chapter{Testes de Robustez}
+
+Experimentos adicionais são realizados para avaliar a robustez dos resultados.
+
+\begin{itemize}
+\item Diferentes períodos de análise;
+\item Diferentes universos de ativos;
+\item Inclusão de custos de transação.
+\end{itemize}
+
+\newpage
+
+% =================================================
+% 8 DISCUSSÃO
+% =================================================
+
+\chapter{Discussão}
+
+Este capítulo interpreta os resultados empíricos obtidos.
+
+Questões abordadas:
+
+\begin{itemize}
+\item Os modelos de aprendizado de máquina melhoram a previsão de retornos?
+\item Os portfólios tornam-se mais estáveis?
+\item O risco é reduzido?
+\end{itemize}
+
+\newpage
+
+% =================================================
+% 9 CONCLUSÃO
+% =================================================
+
+\chapter{Conclusão}
+
+Esta dissertação investigou se modelos de aprendizado de máquina podem melhorar a alocação de portfólio quando combinados com a otimização média-variância.
+
+Os resultados sugerem que abordagens híbridas que unem modelos preditivos e técnicas clássicas de otimização podem melhorar o retorno ajustado ao risco.
+
+\section{Limitações}
+
+\begin{itemize}
+\item Limitações dos dados;
+\item Hipóteses dos modelos;
+\item Custos de transação.
+\end{itemize}
+
+\section{Pesquisas Futuras}
+
+Possíveis extensões incluem:
+
+\begin{itemize}
+\item Modelos de aprendizado de máquina para estimação de covariâncias;
+\item Aprendizado por reforço para alocação de portfólio;
+\item Arquiteturas avançadas de deep learning.
+\end{itemize}
+
+\end{document}

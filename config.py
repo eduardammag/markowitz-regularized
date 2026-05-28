@@ -31,7 +31,23 @@ RISK_FREE_RATE = 0.02
 LAMBDA_REG = 0.1  # regularização Markowitz
 
 # Modelos
-models = ["lasso", "ridge", "elastic"]
+# Baselines tradicionais:
+# - historical_mean: media historica dos retornos
+# - linear: regressao linear simples
+# Regressoes regularizadas:
+# - lasso, ridge, elastic
+# Modelos nao lineares:
+# - random_forest, gradient_boosting, xgboost
+models = [
+    "historical_mean",
+    "linear",
+    "lasso",
+    "ridge",
+    "elastic",
+    "random_forest",
+    "gradient_boosting",
+    "xgboost",
+]
 
 # Gamma: pequena, média e grande
 gammas = [0.1, 0.5, 1, 2, 3, 5, 10, 20, 50, 100]

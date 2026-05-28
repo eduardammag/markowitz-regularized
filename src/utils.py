@@ -72,7 +72,7 @@ def save_plot(fig, name, subfolder):
 def get_model_types(results):
     """
     Extrai automaticamente os tipos de modelo:
-    ex: lasso, ridge, elastic
+    ex: historical_mean, random_forest, gradient_boosting
     """
     print("[DEBUG] Identificando tipos de modelos...")
 
@@ -83,8 +83,11 @@ def get_model_types(results):
         if name in ["equal_weight", "ibov"]:
             continue
 
-        # Extrai prefixo (tipo do modelo)
-        types.add(name.split("_")[0])
+        # O nome do experimento segue o padrao:
+        # <modelo>_g<gamma>_l<lambda>
+        # Como alguns modelos possuem "_" no nome, removemos a parte dos
+        # hiperparametros em vez de cortar no primeiro underscore.
+        types.add(name.split("_g")[0])
 
     types_list = sorted(types)
     print(f"[DEBUG] Tipos encontrados: {types_list}")
