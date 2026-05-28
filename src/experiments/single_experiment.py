@@ -1,10 +1,17 @@
 from config import *
 
 from src.ml_models import predict_returns
-from src.covariance import estimate_covariance
-from src.optimizer import optimize_portfolio
-from src.backtest import run_backtest
-from src.metrics import mse, mae, directional_accuracy, sortino_ratio, calmar_ratio, turnover
+from src.backtesting.engine import run_backtest
+from src.evaluation.prediction_metrics import (
+    calmar_ratio,
+    directional_accuracy,
+    mae,
+    mse,
+    sortino_ratio,
+    turnover,
+)
+from src.portfolio.covariance import estimate_covariance
+from src.portfolio.optimizer import optimize_portfolio
 
 import warnings
 warnings.filterwarnings("ignore")

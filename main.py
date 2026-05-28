@@ -1,12 +1,17 @@
 from multiprocessing import Pool 
 from config import *
 
-from src.data_loader import load_data
-from src.benchmarks import equal_weight_portfolio, ibov_returns
-from src.report import generate_report
-from src.utils import diebold_mariano
-from src.analysis import plot_top_cumulative, plot_risk_return, plot_drawdowns, plot_return_boxplot
-from src.single_experiment import run_single_experiment
+from src.data.loader import load_data
+from src.data.benchmarks import equal_weight_portfolio, ibov_returns
+from src.evaluation.report import generate_report
+from src.evaluation.statistical_tests import diebold_mariano
+from src.experiments.single_experiment import run_single_experiment
+from src.visualization.plots import (
+    plot_drawdowns,
+    plot_return_boxplot,
+    plot_risk_return,
+    plot_top_cumulative,
+)
 
 import numpy as np
 import warnings

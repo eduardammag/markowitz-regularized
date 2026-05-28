@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from src.utils import get_model_types, filter_models, save_plot, compute_drawdown
+from src.evaluation.performance import compute_drawdown
+from src.visualization.helpers import filter_models, get_model_types, save_plot
 
 sns.set_style("whitegrid")
 palette = sns.color_palette("tab10")

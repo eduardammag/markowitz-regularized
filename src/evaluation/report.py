@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-from src.utils import sharpe_ratio, max_drawdown
+
+from src.evaluation.performance import max_drawdown, sharpe_ratio
 
 def generate_report(results_dict):
 
