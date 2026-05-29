@@ -17,9 +17,6 @@ def predict(returns):
     Treina Gradient Boosting para cada ativo e preve o proximo periodo.
     """
 
-    print("[DEBUG] Modelo gradient_boosting: treinando GradientBoostingRegressor")
-
-    # Arvores de boosting tambem funcionam bem sem padronizacao das features.
     X_train, y_train, X_test = make_supervised_dataset(returns)
 
     base_model = GradientBoostingRegressor(

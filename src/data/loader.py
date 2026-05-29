@@ -2,7 +2,8 @@ import os
 import pandas as pd
 import yfinance as yf
 import hashlib
-from config import END_DATE, START_DATE, TEST_WINDOW, TRAIN_WINDOW, TICKERS
+
+from src.data.yahoo import configure_yfinance
 
 # Função interna para gerar um nome único de arquivo de cache
 def _generate_cache_name(tickers, start, end):
@@ -22,60 +23,40 @@ def _generate_cache_name(tickers, start, end):
 # Função principal para carregar os dados
 def load_data(tickers, start, end, force_download=False):
     
-    print("[DEBUG] Iniciando load_data...")
-
     # Gera o caminho do cache baseado nos parâmetros
     cache_path = _generate_cache_name(tickers, start, end)
-    print(f"[DEBUG] Caminho do cache: {cache_path}")
-
     # LOAD CACHE
     # Verifica se o arquivo de cache existe e se não é forçado novo download
     if os.path.exists(cache_path) and not force_download:
-        print(f" Carregando cache: {cache_path}")
-
         # Lê os dados salvos em formato parquet
         prices = pd.read_parquet(cache_path)
-        print(f"[DEBUG] Dados carregados do cache: {prices.shape}")
-
     else:
-        print(" Baixando dados do Yahoo Finance...")
+        print("[INFO] Baixando dados do Yahoo Finance...")
+        configure_yfinance()
 
         # Baixa os dados históricos dos ativos
-        data = yf.download(tickers, start=start, end=end, auto_adjust=True)
-        print("[DEBUG] Download concluído.")
-
-        # Define qual tipo de preço usar (preferência por 'Adj Close')
-        price_type = "Adj Close" if "Adj Close" in data.columns.levels[0] else "Close"
-
-        # Caso não exista 'Adj Close', avisa o usuário
-        if price_type != "Adj Close":
-            print(" 'Adj Close' não encontrado. Usando 'Close'.")
+        data = yf.download(tickers, start=start, end=end, auto_adjust=True, progress=False)
+        # Com auto_adjust=True, o Yahoo ja devolve "Close" ajustado.
+        # Alguns downloads com falha ainda criam "Adj Close" vazio; por isso
+        # preferimos "Close" quando ele existe.
+        price_level = data.columns.get_level_values(0)
+        price_type = "Close" if "Close" in price_level else "Adj Close"
 
         # Seleciona os preços desejados
         prices = data[price_type].copy()
-        print(f"[DEBUG] Preços selecionados: {prices.shape}")
-
         # Remove colunas completamente vazias
         prices = prices.dropna(axis=1, how="all")
 
         # Preenche valores faltantes para frente e remove linhas restantes com NaN
         prices = prices.ffill().dropna()
-        print(f"[DEBUG] Preços após limpeza: {prices.shape}")
-
             # SAVE CACHE
             # Garante que o diretório "data" exista
         os.makedirs("data", exist_ok=True)
 
         # Salva os dados em formato parquet para uso futuro
         prices.to_parquet(cache_path)
-        print(f" Cache salvo em: {cache_path}")
-
     # RETURNS
-    print("[DEBUG] Calculando retornos...")
-
     # Calcula os retornos percentuais
     returns = prices.pct_change().dropna()
-    print(f"[DEBUG] Retornos calculados: {returns.shape}")
-
     return returns
 

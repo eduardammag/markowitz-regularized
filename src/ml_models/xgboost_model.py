@@ -15,8 +15,6 @@ def predict(returns):
     Treina XGBoost para cada ativo e retorna a previsao do proximo periodo.
     """
 
-    print("[DEBUG] Modelo xgboost: treinando XGBRegressor")
-
     try:
         from xgboost import XGBRegressor
     except ImportError as exc:

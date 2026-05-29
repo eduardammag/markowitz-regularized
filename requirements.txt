@@ -4,7 +4,6 @@ scikit-learn
 yfinance
 cvxpy
 matplotlib
-tqdm
 pyarrow
 ecos
 seaborn

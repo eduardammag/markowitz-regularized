@@ -1,6 +1,16 @@
 # Estrutura do pipeline
 
-Este diretorio esta dividido por etapas do fluxo do projeto.
+Este diretorio esta dividido por etapas do fluxo do projeto. A pergunta que
+organiza o codigo e:
+
+> Machine Learning melhora a previsao de retornos esperados e, dentro de
+> Markowitz, gera carteiras melhores que benchmarks tradicionais?
+
+O fluxo deve ser lido nesta ordem:
+
+```text
+data -> ml_models -> portfolio -> backtesting -> evaluation -> visualization
+```
 
 ## 1. data
 
@@ -14,7 +24,6 @@ Carrega dados historicos e cria benchmarks.
 Contem os modelos que preveem retornos esperados.
 
 - `historical_mean.py`: media historica.
-- `linear_regression.py`: regressao linear.
 - `lasso.py`: regressao Lasso.
 - `ridge.py`: regressao Ridge.
 - `elastic_net.py`: Elastic Net.
@@ -41,6 +50,12 @@ Simula a estrategia no tempo.
 Conecta modelo, covariancia, otimizacao e backtest.
 
 - `single_experiment.py`: executa uma combinacao de modelo, gamma e lambda.
+
+Com a configuracao atual, o projeto executa 63 estrategias:
+
+```text
+7 modelos x 3 gammas x 3 lambdas
+```
 
 ## 6. evaluation
 

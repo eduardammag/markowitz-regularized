@@ -15,8 +15,6 @@ def predict(returns):
     Treina Random Forest multioutput e retorna a previsao do proximo periodo.
     """
 
-    print("[DEBUG] Modelo random_forest: treinando RandomForestRegressor")
-
     # Arvores nao exigem padronizacao, entao usamos as features originais.
     X_train, y_train, X_test = make_supervised_dataset(returns)
 

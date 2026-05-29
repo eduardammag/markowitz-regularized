@@ -15,8 +15,6 @@ def predict(returns):
     Treina Lasso em dados historicos e retorna a previsao do proximo periodo.
     """
 
-    print("[DEBUG] Modelo lasso: treinando Lasso")
-
     X_train, y_train, X_test = make_scaled_supervised_dataset(returns)
 
     # Alpha pequeno mantem regularizacao suave, seguindo a configuracao original.

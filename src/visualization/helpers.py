@@ -14,15 +14,13 @@ def save_plot(fig, name, subfolder):
     Salva uma figura dentro de output/<subfolder>.
     """
 
-    print(f"[DEBUG] Salvando grafico: {name} em {subfolder}")
-
     # Cada familia de grafico fica em uma subpasta propria.
     folder = os.path.join(OUTPUT_DIR, subfolder)
     os.makedirs(folder, exist_ok=True)
 
     path = os.path.join(folder, name)
 
-    fig.savefig(path)
+    fig.savefig(path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -33,8 +31,6 @@ def get_model_types(results):
     Exemplo:
     random_forest_g10_l0.1 -> random_forest
     """
-
-    print("[DEBUG] Identificando tipos de modelos...")
 
     types = set()
 
@@ -47,8 +43,6 @@ def get_model_types(results):
         types.add(name.split("_g")[0])
 
     types_list = sorted(types)
-    print(f"[DEBUG] Tipos encontrados: {types_list}")
-
     return types_list
 
 

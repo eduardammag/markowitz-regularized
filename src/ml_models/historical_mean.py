@@ -11,7 +11,5 @@ def predict(returns):
     Retorna a media historica de cada ativo na janela de treino.
     """
 
-    print("[DEBUG] Modelo historical_mean: calculando media historica")
-
     # Cada coluna representa um ativo; a media por coluna gera um vetor de mu.
     return returns.mean().values

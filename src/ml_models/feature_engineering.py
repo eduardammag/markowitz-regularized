@@ -20,8 +20,6 @@ def build_features(returns):
     - volatilidade movel de 20 dias.
     """
 
-    print("[DEBUG] Construindo features...")
-
     # Lags capturam memoria curta dos retornos.
     lags = [1, 2, 3, 5]
     lagged = [returns.shift(lag) for lag in lags]
@@ -43,7 +41,6 @@ def build_features(returns):
 
     X = pd.concat([lagged_df, rolling_mean, rolling_std], axis=1)
 
-    print(f"[DEBUG] Features criadas: {X.shape}")
     return X
 
 
@@ -71,8 +68,6 @@ def make_supervised_dataset(returns):
 
     # A ultima linha e usada como ponto fora da amostra.
     X_test = X.iloc[-1:]
-
-    print(f"[DEBUG] Dataset supervisionado: X_train={X_train.shape}, X_test={X_test.shape}")
 
     return X_train, y_train, X_test
 

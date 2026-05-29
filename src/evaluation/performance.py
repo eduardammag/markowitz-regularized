@@ -7,6 +7,20 @@ modelos, dados brutos ou graficos; recebe apenas retornos ja calculados.
 
 import numpy as np
 
+from config import TEST_WINDOW
+
+
+def periods_per_year():
+    """
+    Frequencia anual equivalente dos retornos gerados pelo backtest.
+
+    O backtest retorna um retorno composto para cada janela de teste, nao um
+    retorno diario. Com TEST_WINDOW=21, temos aproximadamente 12 periodos por
+    ano.
+    """
+
+    return 252 / TEST_WINDOW
+
 
 def sharpe_ratio(returns, rf=0.02):
     """
@@ -15,13 +29,17 @@ def sharpe_ratio(returns, rf=0.02):
     O Sharpe mede retorno medio em excesso por unidade de volatilidade.
     """
 
-    print("[DEBUG] Calculando Sharpe Ratio...")
-
     if callable(returns):
         raise ValueError("returns e uma funcao; chame a funcao antes de calcular Sharpe")
 
-    excess = returns - rf / 252
-    value = np.sqrt(252) * np.mean(excess) / np.std(excess)
+    returns = np.asarray(returns)
+    if returns.size == 0 or np.std(returns) == 0:
+        return 0.0
+
+    periods = periods_per_year()
+    rf_period = (1 + rf) ** (1 / periods) - 1
+    excess = returns - rf_period
+    value = np.sqrt(periods) * np.mean(excess) / np.std(excess)
 
     return value
 
@@ -30,8 +48,6 @@ def max_drawdown(returns):
     """
     Calcula o pior drawdown da serie de retornos.
     """
-
-    print("[DEBUG] Calculando Max Drawdown...")
 
     # Curva acumulada da carteira.
     cum = (1 + returns).cumprod()

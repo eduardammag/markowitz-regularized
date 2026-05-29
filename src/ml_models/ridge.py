@@ -15,8 +15,6 @@ def predict(returns):
     Treina Ridge em dados historicos e retorna a previsao do proximo periodo.
     """
 
-    print("[DEBUG] Modelo ridge: treinando Ridge")
-
     X_train, y_train, X_test = make_scaled_supervised_dataset(returns)
 
     model = Ridge(alpha=1.0)

@@ -1,10 +1,10 @@
 import cvxpy as cp 
 import numpy as np
 
+from config import MAX_WEIGHT
+
 
 def optimize_portfolio(mu, cov, lambda_reg=0.1, gamma=10):
-
-    print("[DEBUG] Iniciando otimização de portfólio...")
 
     # Número de ativos
     n = len(mu)
@@ -49,19 +49,16 @@ def optimize_portfolio(mu, cov, lambda_reg=0.1, gamma=10):
         w >= 0,
 
         # Limite máximo por ativo (30%)
-        w <= 0.3
+        w <= MAX_WEIGHT
     ]
 
     # RESOLUÇÃO DO PROBLEMA
     prob = cp.Problem(objective, constraints)
 
-    print("[DEBUG] Resolvendo problema de otimização...")
     prob.solve(solver=cp.ECOS)
     if w.value is None:
         print("[WARNING] Otimização falhou, usando equal weight")
         return np.ones(n) / n
-
-    print(f"[DEBUG] Status da otimização: {prob.status}")
 
     # Retorna os pesos ótimos encontrados
     return w.value

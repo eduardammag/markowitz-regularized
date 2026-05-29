@@ -5,22 +5,17 @@ from src.evaluation.performance import max_drawdown, sharpe_ratio
 
 def generate_report(results_dict):
 
-    print("[DEBUG] Gerando relatório consolidado...")
-
     # Lista que armazenará cada linha do relatório
     rows = []
 
     # Itera sobre todos os modelos/resultados
     for name, data in results_dict.items():
 
-        print(f"[DEBUG] Processando modelo: {name}")
-
         # Série de retornos do modelo
         returns = data["returns"]
 
         # Se for uma função, chamamos para obter os dados
         if callable(returns):
-            print(f"[DEBUG] returns é função, chamando...")
             returns = returns()
 
         # Confirma que agora returns é numérico
@@ -30,9 +25,11 @@ def generate_report(results_dict):
         # Converte para numpy array (opcional, mas garante consistência)
         returns = np.array(returns)
 
-        # Debug rápido: mostra os 5 primeiros retornos
-        print(f"[DEBUG] type(returns) = {type(returns)}, first 5 = {returns[:5]}")
+        if returns.size == 0:
+            print(f"[WARNING] Modelo '{name}' sem retornos validos. Ignorando no relatorio.")
+            continue
 
+        # Debug rápido: mostra os 5 primeiros retornos
         # MÉTRICAS PRINCIPAIS
         row = {
             "Model": name,
@@ -56,11 +53,7 @@ def generate_report(results_dict):
         # Adiciona linha ao relatório
         rows.append(row)
 
-    print(f"[DEBUG] Total de modelos no relatório: {len(rows)}")
-
     # Converte lista de dicionários em DataFrame
     df = pd.DataFrame(rows)
-
-    print("[DEBUG] Relatório gerado com sucesso.")
 
     return df

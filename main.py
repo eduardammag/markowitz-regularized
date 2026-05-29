@@ -1,4 +1,3 @@
-from multiprocessing import Pool 
 from config import *
 
 from src.data.loader import load_data
@@ -7,10 +6,11 @@ from src.evaluation.report import generate_report
 from src.evaluation.statistical_tests import diebold_mariano
 from src.experiments.single_experiment import run_single_experiment
 from src.visualization.plots import (
+    plot_average_weights,
+    plot_cumulative_returns,
     plot_drawdowns,
-    plot_return_boxplot,
+    plot_performance_bars,
     plot_risk_return,
-    plot_top_cumulative,
 )
 
 import numpy as np
@@ -37,11 +37,12 @@ def main():
     ]
     print(f"[DEBUG] Total de tarefas: {len(tasks)}")
 
-    # Executa os experimentos em paralelo usando 2 processos
-    print("[DEBUG] Iniciando processamento paralelo...")
-    with Pool(2) as pool:
-        outputs = pool.map(run_single_experiment, tasks)
-    print("[DEBUG] Processamento paralelo concluído.")
+    # Executa os experimentos sequencialmente.
+    print("[DEBUG] Iniciando execucao sequencial dos experimentos...")
+    outputs = []
+    for task in tasks:
+        outputs.append(run_single_experiment(task))
+    print("[DEBUG] Experimentos concluidos.")
 
     # Converte a saída em dicionário
     results = dict(outputs)
@@ -51,10 +52,10 @@ def main():
     print("[DEBUG] Calculando benchmarks...")
 
     # Portfólio com pesos iguais
-    eq = equal_weight_portfolio(returns)
+    eq = equal_weight_portfolio(returns, TRAIN_WINDOW, TEST_WINDOW)
 
     # Retornos do IBOVESPA
-    ibov = ibov_returns(START_DATE, END_DATE)
+    ibov = ibov_returns(START_DATE, END_DATE, TRAIN_WINDOW, TEST_WINDOW)
 
     # Adiciona benchmarks aos resultados
     results["equal_weight"] = {
@@ -62,17 +63,15 @@ def main():
         "dates": np.array(eq["dates"])  # mesmo comprimento que returns
     }
 
-    results["ibov"] = {
-        "returns": np.array(ibov["returns"]),
-        "dates": np.array(ibov["dates"])
-    }
+    if len(ibov["returns"]) > 0:
+        results["ibov"] = {
+            "returns": np.array(ibov["returns"]),
+            "dates": np.array(ibov["dates"])
+        }
     print("[DEBUG] Benchmarks adicionados.")
 
     # REPORT
-    print("[DEBUG] Gerando relatório de performance...")
-    for name, data in results.items():
-        returns = data["returns"]
-        print(name, type(returns))
+    print("[DEBUG] Gerando relatorio de performance...")
     # Gera relatório consolidado
     report = generate_report(results)
 
@@ -112,17 +111,18 @@ def main():
     # VISUALIZAÇÕES
     print("[DEBUG] Gerando gráficos...")
 
-    # Gráfico de retornos acumulados dos melhores modelos
-    plot_top_cumulative(results, report)
+    # Retorno acumulado das estrategias
+    plot_cumulative_returns(results, report)
 
     # Relação risco vs retorno
-    plot_risk_return(results)
+    plot_risk_return(results, report)
 
     # Drawdowns (quedas máximas)
     plot_drawdowns(results, report)
 
-    # Boxplot dos retornos
-    plot_return_boxplot(results, report)
+    # Barras de metricas e pesos medios
+    plot_performance_bars(results, report)
+    plot_average_weights(results, report)
 
     print("[DEBUG] Execução finalizada com sucesso!")
 

@@ -15,8 +15,6 @@ def predict(returns):
     Treina Elastic Net em dados historicos e retorna a previsao do proximo periodo.
     """
 
-    print("[DEBUG] Modelo elastic: treinando ElasticNet")
-
     X_train, y_train, X_test = make_scaled_supervised_dataset(returns)
 
     model = ElasticNet(alpha=0.001, l1_ratio=0.5, max_iter=10000)

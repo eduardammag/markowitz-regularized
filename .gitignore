@@ -1,5 +1,7 @@
-\_pycache_
-\venv
-.csv
-.parquet
-\output
+__pycache__/
+*.pyc
+venv/
+.venv/
+output/
+*.csv
+*.parquet

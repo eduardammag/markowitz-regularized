@@ -1,5 +1,4 @@
-from config import *
-
+import config as project_config
 from src.ml_models import predict_returns
 from src.backtesting.engine import run_backtest
 from src.evaluation.prediction_metrics import (
@@ -20,28 +19,22 @@ warnings.filterwarnings("ignore")
 # EXPERIMENTO INDIVIDUAL
 def run_single_experiment(args):
 
-    print("[DEBUG] Iniciando experimento individual...")
-
     m, gamma, lambda_reg, returns = args
 
     name = f"{m}_g{gamma}_l{lambda_reg}"
-    print(f"[DEBUG] Rodando modelo: {name}")
+    print(f"[INFO] Rodando experimento: {name}")
 
     def model_wrapper(data):
         return predict_returns(data, model_type=m)
 
-    print("[DEBUG] Iniciando backtest...")
     portfolio_returns, preds, reals, weights_history, dates = run_backtest(
         returns,
         model_wrapper,
         estimate_covariance,
         lambda mu, cov: optimize_portfolio(mu, cov, lambda_reg, gamma),
-        config=__import__("config")
+        config=project_config
     )
-    print("[DEBUG] Backtest concluído.")
-
     # MÉTRICAS
-    print("[DEBUG] Calculando métricas...")
 
     result = {
         "returns": portfolio_returns,
@@ -56,9 +49,9 @@ def run_single_experiment(args):
         "calmar": calmar_ratio(portfolio_returns),
         "turnover": turnover(weights_history),
         "dates": dates,
+        "weights": weights_history,
+        "assets": list(returns.columns),
         "errors": (reals - preds).flatten()
     }
-
-    print(f"[DEBUG] Experimento finalizado: {name}")
 
     return name, result

@@ -1,16 +1,11 @@
 import numpy as np
-from tqdm import tqdm
 
 
 def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
 
-    print("[DEBUG] Iniciando backtest...")
-
     # Obtém parâmetros de janela a partir do config
     train_window = config.TRAIN_WINDOW
     test_window = config.TEST_WINDOW
-
-    print(f"[DEBUG] TRAIN_WINDOW: {train_window}, TEST_WINDOW: {test_window}")
 
     # Listas para armazenar resultados
     portfolio_returns = []  # retornos do portfólio
@@ -25,8 +20,7 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
     cost = 0.001  
 
     # Loop principal do backtest (rebalanceamento periódico)
-    print("[DEBUG] Iniciando loop do backtest...")
-    for i in tqdm(range(train_window, len(returns) - test_window, test_window)):
+    for i in range(train_window, len(returns) - test_window, test_window):
 
         # SPLIT TREINO / TESTE
         # Janela de treino (histórico passado)
@@ -75,10 +69,7 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
         portfolio_returns.append(cumulative_ret)
 
         # DEBUG (não muito verboso, só progresso essencial)
-        print(f"[DEBUG] Step {i} | Ret (janela): {cumulative_ret:.4f}")
 
-    print("[DEBUG] Backtest finalizado.")
-    
     # Retorna resultados como arrays numpy
     return (
         np.array(portfolio_returns),
