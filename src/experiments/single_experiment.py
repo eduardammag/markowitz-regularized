@@ -19,7 +19,11 @@ warnings.filterwarnings("ignore")
 # EXPERIMENTO INDIVIDUAL
 def run_single_experiment(args):
 
-    m, gamma, lambda_reg, returns = args
+    if len(args) == 5:
+        m, gamma, lambda_reg, returns, prediction_cache = args
+    else:
+        m, gamma, lambda_reg, returns = args
+        prediction_cache = None
 
     name = f"{m}_g{gamma}_l{lambda_reg}"
     print(f"[INFO] Rodando experimento: {name}")
@@ -32,7 +36,9 @@ def run_single_experiment(args):
         model_wrapper,
         estimate_covariance,
         lambda mu, cov: optimize_portfolio(mu, cov, lambda_reg, gamma),
-        config=project_config
+        config=project_config,
+        prediction_cache=prediction_cache,
+        prediction_cache_key=m,
     )
     # MÉTRICAS
 

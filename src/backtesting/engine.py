@@ -1,7 +1,15 @@
 import numpy as np
 
 
-def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
+def run_backtest(
+    returns,
+    model_fn,
+    cov_fn,
+    opt_fn,
+    config,
+    prediction_cache=None,
+    prediction_cache_key=None,
+):
 
     # Obtém parâmetros de janela a partir do config
     train_window = config.TRAIN_WINDOW
@@ -32,7 +40,22 @@ def run_backtest(returns, model_fn, cov_fn, opt_fn, config):
         dates.append(date)
         # PREVISÃO
         # Gera previsão de retorno esperado
-        mu_pred = model_fn(train)
+        cache_key = None
+        if prediction_cache is not None:
+            cache_key = (
+                prediction_cache_key,
+                i,
+                train.index[0],
+                train.index[-1],
+                tuple(train.columns),
+            )
+
+        if prediction_cache is not None and cache_key in prediction_cache:
+            mu_pred = prediction_cache[cache_key]
+        else:
+            mu_pred = model_fn(train)
+            if prediction_cache is not None:
+                prediction_cache[cache_key] = mu_pred
         preds_all.append(mu_pred)
 
         # COVARIÂNCIA

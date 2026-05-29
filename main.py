@@ -2,6 +2,7 @@ from config import *
 
 from src.data.loader import load_data
 from src.data.benchmarks import equal_weight_portfolio, ibov_returns
+from src.evaluation import report
 from src.evaluation.report import generate_report
 from src.evaluation.statistical_tests import diebold_mariano
 from src.experiments.single_experiment import run_single_experiment
@@ -29,8 +30,9 @@ def main():
 
     # Cria lista de tarefas combinando todos os parâmetros
     print("[DEBUG] Criando lista de tarefas...")
+    prediction_cache = {}
     tasks = [
-        (m, gamma, lambda_reg, returns)
+        (m, gamma, lambda_reg, returns, prediction_cache)
         for m in models
         for gamma in gammas
         for lambda_reg in lambdas
@@ -77,7 +79,8 @@ def main():
 
     # Ordena pelo índice de Sharpe (maior para menor)
     report = report.sort_values(by="Sharpe", ascending=False)
-
+    report.to_csv("output/tcc/performance_summary.csv", index=False)
+    
     print("\n===== PERFORMANCE =====\n")
     print(report)
 

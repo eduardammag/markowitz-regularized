@@ -18,7 +18,7 @@
 \usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{xcolor}
-
+\usepackage{indentfirst}
 \geometry{
     left=3cm,
     right=2cm,
@@ -41,10 +41,10 @@
 % INFORMAÇÕES DO TRABALHO
 % ------------------------------------------------
 \newcommand{\instituicao}{FGV EMAp}
-\newcommand{\curso}{Data Science \& Artificial Intelligence}
+\newcommand{\curso}{Ciência de Dados e Inteligência Artifical}
 \newcommand{\autora}{Maria Eduarda Mesquita Magalhães}
-\newcommand{\titulo}{Otimização de Portfólios com Aprendizado de Máquina e Markowitz Regularizado}
-\newcommand{\orientador}{Nome do(a) orientador(a)}
+\newcommand{\titulo}{Aprendizado de Máquina Aplicado à Alocação de Portfólios no Mercado Acionário Brasileiro}
+\newcommand{\orientador}{Yuri Saporito}
 \newcommand{\local}{Rio de Janeiro}
 \newcommand{\ano}{2026}
 
@@ -64,13 +64,10 @@
     % Espaço reservado para a logo da faculdade.
     % Substitua o arquivo abaixo pelo caminho correto da logo.
     % Exemplo: \includegraphics[width=0.28\textwidth]{figures/logo_fgv.png}
-    \fbox{
-        \begin{minipage}[c][3cm][c]{0.45\textwidth}
-            \centering
-            Espaço para a logo da faculdade
-        \end{minipage}
-    }
-
+\begin{minipage}[c][3cm][c]{0.45\textwidth}
+    \centering
+    \includegraphics[width=0.8\linewidth]{output/tcc/logo-fgv.png}
+\end{minipage}
     \vspace{1.5cm}
 
     {\large \instituicao \par}
@@ -88,7 +85,7 @@
 
     \begin{flushright}
     \begin{minipage}{0.55\textwidth}
-    Trabalho de Conclusão de Curso apresentado à \instituicao\ como requisito parcial para obtenção do grau em \curso.
+    Trabalho de Conclusão de Curso apresentado à \instituicao\ como requisito parcial para obtenção do grau de bacharel em \curso.
 
     \vspace{0.3cm}
     Orientador(a): \orientador
@@ -127,7 +124,7 @@ Os resultados são comparados com dois benchmarks: uma carteira igualmente ponde
 
 \section{Motivação}
 
-A construção de portfólios é um dos problemas centrais em finanças quantitativas. Investidores buscam distribuir capital entre diferentes ativos de modo a obter retorno compatível com seu apetite a risco. Desde o trabalho seminal de Markowitz, a alocação média-variância tornou-se uma das principais formulações matemáticas para esse problema, pois oferece uma estrutura clara para relacionar retorno esperado, risco e diversificação.
+A construção de portfólios é um dos problemas centrais em finanças quantitativas. Investidores buscam distribuir capital entre diferentes ativos de modo a obter retorno compatível com seu apetite a risco. Desde o trabalho seminal de Markowitz \cite{markowitz1952}, a alocação média-variância tornou-se uma das principais formulações matemáticas para esse problema, pois oferece uma estrutura clara para relacionar retorno esperado, risco e diversificação.
 
 Apesar de sua importância teórica, a aplicação prática da teoria de Markowitz apresenta dificuldades relevantes. A mais conhecida é a sensibilidade da solução aos parâmetros de entrada. Em particular, o vetor de retornos esperados é difícil de estimar e, quando estimado com ruído, pode gerar carteiras instáveis, concentradas ou pouco robustas fora da amostra.
 
@@ -135,9 +132,16 @@ Nos últimos anos, modelos de aprendizado de máquina passaram a ser utilizados 
 
 Diante disso, este trabalho investiga uma pergunta aplicada:
 
-\begin{quote}
-Modelos de aprendizado de máquina melhoram a estimação de retornos esperados e, quando combinados com Markowitz regularizado, geram carteiras superiores a estratégias tradicionais?
-\end{quote}
+\begin{center}
+\fbox{
+\parbox{0.85\textwidth}{
+\centering
+\textbf{\large
+Modelos de aprendizado de máquina melhoram a estimação de retornos esperados e, quando combinados com Markowitz regularizado, geram carteiras superiores às estratégias tradicionais?
+}
+}
+}
+\end{center}
 
 \section{Objetivos}
 
@@ -220,7 +224,7 @@ O termo $\gamma$ controla a aversão a risco. Quanto maior $\gamma$, maior a pen
 
 \section{Estimação da Matriz de Covariância}
 
-A matriz de covariância é estimada pelo método de Ledoit-Wolf. A ideia central é combinar a matriz de covariância amostral com uma matriz estruturada mais estável. De forma geral:
+A matriz de covariância é estimada pelo método de Ledoit-Wolf \cite{ledoitwolf2004}. A ideia central é combinar a matriz de covariância amostral com uma matriz estruturada mais estável. De forma geral:
 
 \begin{equation}
 \hat{\Sigma}_{LW}
@@ -234,7 +238,7 @@ em que $S$ é a matriz de covariância amostral, $F$ é uma matriz alvo estrutur
 
 \section{Índice de Sharpe}
 
-O índice de Sharpe mede retorno em excesso por unidade de risco:
+O índice de Sharpe \cite{sharpe1966} mede retorno em excesso por unidade de risco:
 
 \begin{equation}
 S =
@@ -262,7 +266,9 @@ em que:
 R_{f,K} = (1 + R_f)^{1/K} - 1.
 \end{equation}
 
-Essa correção é importante. Usar $\sqrt{252}$ sobre retornos mensais superestima artificialmente o Sharpe.
+
+Essa correção é importante porque o fator de anualização depende da frequência dos retornos utilizados no cálculo. Como os retornos avaliados neste trabalho correspondem a períodos de aproximadamente 21 pregões, utilizar o fator $\sqrt{252}$ — apropriado para retornos diários — implica assumir incorretamente que cada observação representa apenas um dia de negociação. Como consequência, a volatilidade é escalada em excesso e o índice de Sharpe resultante deixa de refletir corretamente a relação entre retorno e risco da estratégia. Portanto, a anualização deve ser realizada com $\sqrt{K}$, onde $K$ representa o número de observações por ano compatível com a frequência efetiva dos retornos analisados.
+
 
 % =================================================
 % 3 MODELOS DE APRENDIZADO DE MÁQUINA
@@ -305,7 +311,7 @@ Esse modelo não aprende relações entre atributos; ele assume que a média pas
 
 \section{Lasso}
 
-O Lasso é uma regressão linear regularizada por penalização $\ell_1$. Para um problema univariado, sua função objetivo é:
+O Lasso \cite{tibshirani1996} é uma regressão linear regularizada por penalização $\ell_1$. Para um problema univariado, sua função objetivo é:
 
 \begin{equation}
 \min_{\beta}
@@ -319,7 +325,7 @@ A penalização $\ell_1$ pode zerar coeficientes, funcionando como seleção aut
 
 \section{Ridge}
 
-O Ridge usa penalização $\ell_2$:
+O Ridge \cite{hoerl1970} usa penalização $\ell_2$:
 
 \begin{equation}
 \min_{\beta}
@@ -333,7 +339,7 @@ Ao contrário do Lasso, o Ridge não tende a zerar coeficientes, mas reduz sua m
 
 \section{Elastic Net}
 
-O Elastic Net combina penalizações $\ell_1$ e $\ell_2$:
+O Elastic Net \cite{zou2005} combina penalizações $\ell_1$ e $\ell_2$:
 
 \begin{equation}
 \min_{\beta}
@@ -352,7 +358,7 @@ Neste trabalho, utiliza-se $\alpha=0.001$ e $\rho=0.5$, de modo que o modelo fiq
 
 \section{Random Forest}
 
-Random Forest é um método baseado em árvores de decisão. O modelo combina diversas árvores treinadas em amostras e subconjuntos de variáveis, reduzindo variância e capturando relações não lineares. A previsão final é obtida pela média das previsões das árvores:
+Random Forest \cite{breiman2001} é um método baseado em árvores de decisão. O modelo combina diversas árvores treinadas em amostras e subconjuntos de variáveis, reduzindo variância e capturando relações não lineares. A previsão final é obtida pela média das previsões das árvores:
 
 \begin{equation}
 \hat{y}
@@ -366,7 +372,7 @@ em que $T_b$ é a árvore $b$ e $B$ é o número total de árvores.
 
 \section{Gradient Boosting e XGBoost}
 
-Modelos de boosting constroem árvores sequencialmente, de modo que cada nova árvore tenta corrigir os erros das anteriores. De forma simplificada:
+Modelos de boosting \cite{friedman2001,chen2016}  constroem árvores sequencialmente, de modo que cada nova árvore tenta corrigir os erros das anteriores. De forma simplificada:
 
 \begin{equation}
 F_m(\mathbf{x})
@@ -455,7 +461,7 @@ Covariância & Ledoit-Wolf \\
 
 \section{Justificativa dos Hiperparâmetros}
 
-O parâmetro $\gamma=5$ representa uma aversão a risco intermediária. Valores muito baixos tenderiam a priorizar excessivamente as previsões de retorno, que são ruidosas em finanças. Valores muito altos poderiam produzir carteiras excessivamente conservadoras. Portanto, $\gamma=5$ é escolhido como valor central para o experimento principal.
+O parâmetro $\gamma=5$ representa uma aversão a risco intermediária \cite{liu2010,bodnar2015}. Valores muito baixos tenderiam a priorizar excessivamente as previsões de retorno, que são ruidosas em finanças. Valores muito altos poderiam produzir carteiras excessivamente conservadoras. Portanto, $\gamma=5$ é escolhido como valor central para o experimento principal.
 
 O parâmetro $\lambda=0.1$ controla a regularização dos pesos. Sua função é reduzir instabilidade e evitar alocações excessivamente sensíveis às previsões. A escolha de um valor moderado é coerente com o objetivo de construir carteiras mais robustas.
 
@@ -523,19 +529,15 @@ Para garantir comparabilidade, os retornos dos benchmarks são agregados nas mes
 % =================================================
 \chapter{Métricas de Avaliação}
 
-\section{Métricas Financeiras}
+\section{Visão Geral da Avaliação}
 
-As métricas financeiras utilizadas são:
+A avaliação das estratégias é feita em duas dimensões complementares. A primeira é financeira e mede o desempenho das carteiras efetivamente formadas pelo otimizador de Markowitz. A segunda é preditiva e mede a qualidade das previsões de retorno produzidas pelos modelos de aprendizado de máquina. Essa separação é essencial porque o objetivo final do trabalho não é apenas prever retornos com baixo erro estatístico, mas transformar essas previsões em decisões de alocação capazes de gerar melhor relação risco-retorno.
 
-\begin{itemize}
-    \item retorno acumulado;
-    \item índice de Sharpe anualizado com frequência correta;
-    \item máximo drawdown;
-    \item turnover médio;
-    \item pesos médios por ativo.
-\end{itemize}
+No contexto de portfólios, uma previsão ligeiramente melhor pode não resultar em uma carteira melhor caso o otimizador amplifique ruídos, concentre pesos em poucos ativos ou gere alto turnover. Da mesma forma, uma previsão com erro médio relativamente maior pode ainda produzir boa performance financeira se preservar corretamente a ordenação relativa dos ativos ou se evitar sinais extremos.
 
-O retorno acumulado ao longo de $T$ períodos é:
+\section{Retorno Acumulado}
+
+O retorno acumulado mede o crescimento total do capital ao longo do backtest. Como cada observação representa o retorno composto de uma janela de teste de aproximadamente 21 pregões, o retorno acumulado da estratégia ao longo de $T$ janelas é dado por:
 
 \begin{equation}
 R_{acum}
@@ -545,7 +547,39 @@ R_{acum}
 - 1.
 \end{equation}
 
-O máximo drawdown é:
+Essa métrica é intuitiva porque mostra o ganho ou perda total produzido pela estratégia. Contudo, ela não considera o risco assumido para obter esse resultado. Uma carteira pode apresentar retorno acumulado elevado simplesmente por ter assumido exposição excessiva a ativos voláteis ou por ter concentrado capital em poucos nomes que performaram bem no período. Portanto, o retorno acumulado deve ser analisado junto com volatilidade, drawdown, Sharpe e concentração dos pesos.
+
+\section{Índice de Sharpe}
+
+O índice de Sharpe mede o retorno em excesso por unidade de risco. Neste trabalho, ele é uma das principais métricas de comparação entre estratégias, pois permite avaliar se um retorno maior foi acompanhado de risco proporcionalmente maior. Para os retornos de carteira $R_{p,t}$, calcula-se:
+
+\begin{equation}
+S
+=
+\sqrt{K}
+\frac{\bar{R}_p - R_{f,K}}{\sigma_p},
+\end{equation}
+
+em que $\bar{R}_p$ é o retorno médio por janela de teste, $\sigma_p$ é o desvio-padrão dos retornos por janela, $R_{f,K}$ é a taxa livre de risco ajustada para a frequência do backtest e $K$ é o número de períodos de teste por ano. Como a janela de teste possui 21 pregões, utiliza-se:
+
+\begin{equation}
+K = \frac{252}{21}.
+\end{equation}
+
+Esse ponto é metodologicamente importante. Caso se utilizasse $\sqrt{252}$ diretamente sobre retornos mensais, o Sharpe seria anualizado como se cada observação fosse diária, inflando artificialmente a estatística. A correção da frequência torna a comparação mais consistente com o desenho do backtest.
+
+\section{Máximo Drawdown}
+
+O máximo drawdown mede a maior perda acumulada a partir de um pico histórico do valor da carteira. Definindo $V_t$ como o valor acumulado da carteira no período $t$, o drawdown é:
+
+\begin{equation}
+DD_t
+=
+\frac{V_t - \max_{\tau \leq t} V_{\tau}}
+{\max_{\tau \leq t} V_{\tau}},
+\end{equation}
+
+e o máximo drawdown é:
 
 \begin{equation}
 MDD
@@ -559,9 +593,49 @@ MDD
 
 em que $V_t$ é o valor acumulado da carteira no período $t$.
 
-\section{Métricas Preditivas}
+O drawdown é relevante porque captura uma dimensão de risco que a volatilidade não descreve completamente: a severidade das perdas ao longo do tempo. Uma estratégia pode ter volatilidade moderada e ainda assim sofrer uma queda prolongada que torna sua aplicação pouco aceitável para um investidor. Em termos práticos, drawdowns elevados indicam maior risco de abandono da estratégia e maior dificuldade de recuperação do capital.
 
-Além da performance financeira, avaliam-se métricas de previsão:
+\section{Turnover Médio}
+
+O turnover mede quanto a carteira muda de uma janela de rebalanceamento para a próxima. Para pesos $\mathbf{w}_t$ e $\mathbf{w}_{t-1}$, define-se:
+
+\begin{equation}
+TO_t =
+\sum_{i=1}^{N}
+|w_{i,t} - w_{i,t-1}|.
+\end{equation}
+
+O turnover médio é:
+
+\begin{equation}
+\overline{TO}
+=
+\frac{1}{T-1}
+\sum_{t=2}^{T}
+TO_t.
+\end{equation}
+
+Essa métrica é importante porque carteiras muito instáveis podem parecer atraentes antes de custos, mas perder desempenho quando custos de transação, impostos, bid-ask spread e restrições operacionais são considerados. Neste trabalho, o custo de transação é modelado de forma simplificada como uma penalização proporcional ao turnover.
+
+\section{Pesos Médios e Concentração}
+
+Os pesos médios por ativo são usados para avaliar como cada modelo distribui capital entre as ações do universo. Para cada ativo $i$, calcula-se:
+
+\begin{equation}
+\bar{w}_i
+=
+\frac{1}{T}
+\sum_{t=1}^{T}
+w_{i,t}.
+\end{equation}
+
+Essa análise permite verificar se uma estratégia depende excessivamente de poucos ativos. Mesmo com a restrição de peso máximo de 15\%, um modelo pode operar de forma persistentemente concentrada, mantendo sempre determinados ativos próximos ao limite superior. Uma carteira excessivamente concentrada pode apresentar bom desempenho em um período específico, mas tende a ser mais sensível a choques idiossincráticos.
+
+Além dos pesos médios, a concentração pode ser interpretada pela frequência com que o limite máximo por ativo é atingido e pelo grau de dispersão dos pesos. Quanto maior a dispersão, menor a diversificação efetiva da carteira. Essa informação ajuda a diferenciar estratégias que obtêm retorno por diversificação robusta daquelas que dependem de apostas concentradas.
+
+\section{Erro Quadrático Médio}
+
+Além da performance financeira, avaliam-se métricas de previsão. O erro quadrático médio, ou MSE, é definido por:
 
 \begin{equation}
 MSE =
@@ -570,6 +644,14 @@ MSE =
 (y_j - \hat{y}_j)^2,
 \end{equation}
 
+em que $y_j$ representa o retorno observado e $\hat{y}_j$ representa o retorno previsto. O MSE penaliza erros grandes de forma mais intensa, pois os desvios são elevados ao quadrado. Em finanças, isso pode ser útil para identificar modelos que ocasionalmente produzem previsões muito distantes da realidade, algo perigoso em uma etapa posterior de otimização.
+
+No entanto, o MSE também deve ser interpretado com cautela. Retornos financeiros possuem ruído elevado e eventos extremos podem dominar a métrica. Um modelo com MSE menor não necessariamente gera melhor carteira, especialmente se os erros remanescentes ocorrerem justamente nos ativos mais relevantes para a alocação.
+
+\section{Erro Absoluto Médio}
+
+O erro absoluto médio, ou MAE, é dado por:
+
 \begin{equation}
 MAE =
 \frac{1}{n}
@@ -577,7 +659,11 @@ MAE =
 |y_j - \hat{y}_j|,
 \end{equation}
 
-e acurácia direcional:
+Ao contrário do MSE, o MAE penaliza os erros de forma linear. Por isso, é menos sensível a outliers e oferece uma medida mais estável do erro típico de previsão. No contexto deste trabalho, o MAE complementa o MSE ao mostrar se um modelo apresenta erro médio consistentemente menor, sem que a avaliação seja excessivamente dominada por poucos períodos extremos.
+
+\section{Acurácia Direcional}
+
+A acurácia direcional mede a proporção de previsões em que o modelo acerta o sinal do retorno:
 
 \begin{equation}
 DA =
@@ -591,7 +677,23 @@ DA =
 \right].
 \end{equation}
 
-Essa separação é importante porque um bom modelo preditivo não necessariamente gera a melhor carteira. A otimização transforma previsões em pesos, e essa etapa pode amplificar ou reduzir diferenças entre modelos.
+Essa métrica é especialmente relevante em alocação de portfólios porque, muitas vezes, acertar a direção relativa dos retornos é mais importante do que prever exatamente sua magnitude. Um modelo pode errar o valor numérico do retorno, mas ainda assim indicar corretamente quais ativos possuem expectativa positiva ou negativa. Isso pode ser suficiente para melhorar a alocação.
+
+Por outro lado, a acurácia direcional também possui limitações. Ela trata todos os acertos como equivalentes, independentemente do tamanho do retorno. Acertar o sinal de um movimento pequeno tem o mesmo peso que acertar o sinal de um movimento grande. Por isso, a métrica deve ser lida junto com MSE, MAE e performance financeira.
+
+\section{Relação entre Métricas Preditivas e Financeiras}
+
+Uma contribuição importante da avaliação é comparar se os modelos com melhores métricas preditivas também geram as melhores carteiras. Essa relação não é garantida. A etapa de otimização é sensível ao vetor de retornos esperados e pode transformar pequenas diferenças de previsão em grandes diferenças de pesos.
+
+Assim, a análise empírica considera três perguntas:
+
+\begin{enumerate}
+    \item quais modelos produzem menor erro de previsão;
+    \item quais modelos produzem melhor relação risco-retorno;
+    \item se existe correspondência clara entre qualidade preditiva e performance de carteira.
+\end{enumerate}
+
+Essa estrutura evita uma conclusão simplista baseada apenas no maior retorno acumulado. Em mercados financeiros, uma estratégia robusta deve combinar retorno, controle de risco, estabilidade dos pesos, custos operacionais razoáveis e ausência de dependência excessiva de poucos ativos ou poucos períodos.
 
 % =================================================
 % 6 RESULTADOS
@@ -710,32 +812,117 @@ A comparação com o Ibovespa deve ser interpretada com cautela. O Ibovespa repr
 
 \section{Limitações}
 
-As principais limitações do estudo são:
+Como todo estudo empírico em finanças quantitativas, este trabalho possui limitações metodológicas e operacionais. Essas limitações não invalidam o experimento, mas delimitam o alcance das conclusões. A interpretação correta dos resultados exige reconhecer quais aspectos foram controlados pelo desenho do backtest e quais permanecem como fontes potenciais de incerteza.
 
-\begin{itemize}
-    \item uso de um período histórico relativamente recente;
-    \item dependência dos dados do Yahoo Finance;
-    \item número limitado de ativos;
-    \item ausência de variáveis macroeconômicas;
-    \item hiperparâmetros fixos no experimento principal;
-    \item custo de transação simplificado;
-    \item uso de modelos preditivos treinados apenas com atributos derivados dos próprios retornos.
-\end{itemize}
+\subsection{Período Histórico Relativamente Recente}
+
+O estudo utiliza um período histórico recente, concentrado em anos marcados por eventos macroeconômicos relevantes, como a crise da Covid-19, mudanças no regime de juros, aumento de volatilidade global e alterações no ciclo econômico brasileiro. Esse recorte possui a vantagem de avaliar as estratégias em um ambiente desafiador e representativo de condições recentes de mercado.
+
+Por outro lado, um período curto ou muito específico pode favorecer modelos que se adaptaram bem a um regime particular, mas que não necessariamente manteriam desempenho em outros ciclos. Uma estratégia que funciona em um ambiente de alta volatilidade pode não funcionar em um mercado lateral ou em um ciclo prolongado de alta. Portanto, os resultados devem ser interpretados como evidência para o intervalo analisado, e não como prova de superioridade permanente.
+
+\subsection{Dependência dos Dados do Yahoo Finance}
+
+Os dados utilizados são obtidos a partir do Yahoo Finance, uma fonte amplamente acessível e conveniente para estudos acadêmicos e prototipagem. Apesar disso, bases gratuitas podem conter limitações relacionadas a ajustes de preços, dividendos, eventos corporativos, mudanças de ticker, falhas pontuais e diferenças em relação a bases profissionais.
+
+Como o backtest depende diretamente da série de preços ajustados, erros ou inconsistências nos dados podem afetar retornos, covariâncias, previsões e, por consequência, pesos otimizados. Esse risco é particularmente relevante em mercados como o brasileiro, onde eventos corporativos e distribuições de proventos podem ter impacto significativo. Uma validação adicional com fontes alternativas, como Economatica, Bloomberg, Refinitiv ou B3, aumentaria a confiabilidade empírica do estudo.
+
+\subsection{Número Limitado de Ativos}
+
+O universo de 20 ativos foi escolhido para manter liquidez, histórico consistente e representatividade setorial. Essa decisão torna o experimento mais controlado e reduz problemas associados a ativos pouco negociados. Entretanto, um universo limitado também restringe as oportunidades de diversificação e pode tornar os resultados sensíveis à escolha inicial das empresas.
+
+Caso alguns ativos tenham apresentado desempenho excepcional no período, as estratégias podem parecer melhores por terem se beneficiado da composição específica do universo. De forma análoga, a exclusão de ativos relevantes pode limitar a capacidade de comparação com o mercado amplo. Uma análise futura poderia testar universos maiores, diferentes filtros de liquidez ou carteiras segmentadas por setor.
+
+\subsection{Ausência de Variáveis Macroeconômicas e Fatores de Mercado}
+
+Os modelos preditivos utilizam atributos derivados dos próprios retornos, como defasagens, médias móveis e volatilidade. Essa escolha reduz a complexidade do pipeline e evita problemas de disponibilidade e alinhamento temporal de variáveis externas. Contudo, retornos acionários são influenciados por fatores macroeconômicos e de mercado que não são explicitamente incorporados.
+
+Variáveis como taxa Selic, inflação, câmbio, curva de juros, preços de commodities, indicadores de atividade e fatores de risco poderiam melhorar a capacidade explicativa dos modelos. No caso brasileiro, fatores como dólar, petróleo, minério de ferro e juros futuros podem ser especialmente relevantes para empresas como Petrobras, Vale, bancos e companhias sensíveis ao ciclo doméstico.
+
+\subsection{Hiperparâmetros Fixos no Experimento Principal}
+
+O experimento principal utiliza valores fixos para parâmetros como $\gamma$, $\lambda$, tamanho das janelas e configurações dos modelos preditivos. Essa decisão torna os resultados mais simples de interpretar e evita transformar o trabalho em uma busca excessiva de hiperparâmetros. No entanto, também significa que as conclusões podem depender da configuração escolhida.
+
+Em particular, $\gamma$ controla a penalização de risco no Markowitz, enquanto $\lambda$ controla a regularização dos pesos. Valores diferentes podem gerar carteiras mais agressivas, mais conservadoras, mais concentradas ou mais diversificadas. Assim, uma estratégia que parece inferior em uma configuração pode melhorar em outra. Por isso, análises de sensibilidade são importantes para avaliar robustez.
+
+\subsection{Custo de Transação Simplificado}
+
+O custo de transação é modelado como uma taxa fixa proporcional ao turnover. Essa aproximação é útil para penalizar carteiras excessivamente instáveis, mas não captura toda a complexidade de execução no mercado real. Custos efetivos dependem de liquidez, volume negociado, spread, corretagem, impostos, slippage, tamanho da ordem e condições de mercado no momento da negociação.
+
+Além disso, ativos diferentes possuem custos implícitos diferentes. Uma operação em uma ação extremamente líquida pode ter impacto pequeno, enquanto uma operação em ativo menos líquido pode gerar custo maior. Portanto, os retornos líquidos estimados devem ser vistos como aproximação, não como simulação completa de execução.
+
+\subsection{Atributos Baseados Apenas em Retornos}
+
+Os modelos são treinados com variáveis construídas a partir das próprias séries de retornos. Essa abordagem é objetiva e reproduzível, mas limita o conjunto de informações disponíveis ao modelo. Em mercados financeiros, parte relevante do sinal pode estar em variáveis fundamentalistas, macroeconômicas, microestruturais ou de sentimento, que não aparecem diretamente nos retornos passados.
+
+Como consequência, modelos mais flexíveis, como Random Forest, Gradient Boosting e XGBoost, podem não revelar todo seu potencial caso as variáveis explicativas contenham pouco sinal. Nesse caso, a limitação não está necessariamente no algoritmo, mas no conjunto de atributos utilizado.
+
+\subsection{Risco de Sobreajuste e Não Estacionariedade}
+
+Retornos financeiros apresentam baixa relação sinal-ruído e mudanças estruturais ao longo do tempo. Modelos de aprendizado de máquina podem capturar padrões aparentes que não se repetem fora da amostra. Mesmo com janela móvel e separação temporal entre treino e teste, permanece o risco de que os modelos se ajustem a relações transitórias.
+
+A não estacionariedade também afeta a estimação da matriz de covariância. Correlações entre ativos podem mudar em momentos de crise, e relações históricas podem perder validade. O uso de Ledoit-Wolf reduz instabilidade estatística, mas não elimina mudanças econômicas reais na estrutura de risco.
 
 \section{Análises de Robustez Recomendadas}
 
-Como extensão, recomenda-se avaliar:
+As análises de robustez têm como objetivo verificar se as conclusões dependem de escolhas específicas do experimento. Quanto mais estável for o ranking das estratégias sob diferentes configurações, maior a confiança de que o resultado não é apenas produto de uma combinação particular de parâmetros.
 
-\begin{enumerate}
-    \item diferentes valores de $\gamma$, como $\{1,5,10\}$;
-    \item diferentes valores de $\lambda$, como $\{0.01,0.1,1\}$;
-    \item janelas de treino maiores, como 504 pregões;
-    \item diferentes universos de ativos;
-    \item diferentes níveis de custo de transação;
-    \item comparação entre covariância Ledoit-Wolf e covariância amostral.
-\end{enumerate}
+\subsection{Variação do Parâmetro de Aversão a Risco}
 
-Essas análises ajudam a verificar se os resultados dependem fortemente de uma configuração específica.
+Recomenda-se testar diferentes valores de $\gamma$, como:
+
+\begin{equation}
+\gamma \in \{1,5,10\}.
+\end{equation}
+
+Valores menores de $\gamma$ tornam a otimização mais sensível às previsões de retorno, podendo gerar carteiras mais agressivas. Valores maiores aumentam a importância da variância e tendem a produzir alocações mais conservadoras. Essa análise ajuda a responder se um modelo tem bom desempenho porque suas previsões são realmente úteis ou porque o otimizador está reduzindo a exposição ao sinal preditivo.
+
+\subsection{Variação da Regularização dos Pesos}
+
+Também é recomendável testar diferentes valores de $\lambda$:
+
+\begin{equation}
+\lambda \in \{0.01,0.1,1\}.
+\end{equation}
+
+Valores baixos permitem maior liberdade ao otimizador, enquanto valores altos penalizam carteiras com pesos mais extremos. Se os resultados mudarem drasticamente com pequenas variações de $\lambda$, isso indica sensibilidade elevada da estratégia. Se, por outro lado, os modelos mais competitivos permanecerem semelhantes, a evidência de robustez será mais forte.
+
+\subsection{Janelas de Treino Alternativas}
+
+O experimento principal utiliza 252 pregões de treino, aproximadamente um ano de dados. Uma extensão natural é testar janelas maiores, como 504 pregões. Janelas maiores fornecem mais observações para estimação dos modelos e da covariância, mas podem incorporar informações antigas que já não representam o regime atual de mercado.
+
+Janelas menores, por outro lado, tornam o modelo mais responsivo a mudanças recentes, mas aumentam o risco de estimação ruidosa. Comparar diferentes tamanhos de janela permite avaliar esse trade-off entre estabilidade estatística e adaptação temporal.
+
+\subsection{Universos de Ativos Diferentes}
+
+Outra análise importante é repetir o estudo com diferentes conjuntos de ativos. Isso pode incluir um universo maior de ações, subconjuntos setoriais ou ativos escolhidos por critérios objetivos de liquidez e valor de mercado. O objetivo é verificar se os resultados dependem das 20 empresas selecionadas ou se se mantêm em universos alternativos.
+
+Essa robustez é especialmente relevante porque a escolha do universo define as oportunidades disponíveis ao otimizador. Um modelo pode parecer eficiente em um universo com poucos ativos fortemente vencedores, mas perder desempenho em uma amostra mais ampla e heterogênea.
+
+\subsection{Diferentes Níveis de Custo de Transação}
+
+Recomenda-se avaliar custos como:
+
+\begin{equation}
+c \in \{0, 0.001, 0.005, 0.01\}.
+\end{equation}
+
+Essa análise mostra quanto da performance depende de rebalanceamentos frequentes. Estratégias robustas devem manter desempenho razoável mesmo após penalizações moderadas de custo. Caso uma estratégia perca grande parte do retorno com pequenos custos, sua aplicabilidade prática fica limitada.
+
+\subsection{Comparação entre Estimadores de Covariância}
+
+O uso de Ledoit-Wolf busca melhorar a estabilidade da matriz de covariância. Como robustez, pode-se comparar essa escolha com a covariância amostral e, eventualmente, com modelos EWMA. A covariância amostral é mais simples, mas pode ser instável em janelas curtas. Já o EWMA atribui maior peso a observações recentes, podendo reagir melhor a mudanças de volatilidade.
+
+Se a performance das estratégias depender fortemente do estimador de covariância, isso indica que a etapa de modelagem de risco é tão importante quanto a previsão de retornos. Essa conclusão seria consistente com a literatura de portfólios, na qual a estimação de risco frequentemente apresenta papel central na qualidade da alocação.
+
+\subsection{Comparação com Benchmarks Adicionais}
+
+Além da carteira igualmente ponderada e do Ibovespa, análises futuras poderiam incluir uma carteira de mínima variância, uma carteira baseada apenas em média histórica sem modelos de aprendizado de máquina e uma estratégia buy-and-hold dos ativos selecionados. Esses benchmarks ajudariam a separar o ganho vindo da previsão, da otimização e da própria escolha do universo de ativos.
+
+\section{Síntese da Robustez}
+
+Em conjunto, as limitações e análises de robustez mostram que o resultado principal deve ser interpretado como evidência empírica condicionada ao desenho experimental. A conclusão mais forte não depende apenas de qual modelo teve maior retorno acumulado, mas de quais estratégias permanecem competitivas quando variam parâmetros, custos, janelas, universo de ativos e estimadores de risco.
+
+Essa abordagem torna o trabalho mais cuidadoso e evita uma interpretação excessivamente otimista. Em finanças, robustez é tão importante quanto performance pontual, pois estratégias que funcionam apenas sob uma configuração específica tendem a ter menor valor prático fora da amostra.
 
 % =================================================
 % 9 CONCLUSÃO
@@ -758,11 +945,13 @@ Como conclusão esperada, o estudo permite avaliar se modelos de aprendizado de 
 \bibitem{markowitz1952}
 MARKOWITZ, H. Portfolio Selection. \textit{The Journal of Finance}, v. 7, n. 1, p. 77--91, 1952.
 
+\bibitem{ledoitwolf2004}
+LEDOIT, O.; WOLF, M. A well-conditioned estimator for large-dimensional covariance matrices. \textit{Journal of Multivariate Analysis}, v. 88, n. 2, p. 365--411, 2004.
+
 \bibitem{sharpe1966}
 SHARPE, W. F. Mutual Fund Performance. \textit{The Journal of Business}, v. 39, n. 1, p. 119--138, 1966.
 
-\bibitem{ledoitwolf2004}
-LEDOIT, O.; WOLF, M. A well-conditioned estimator for large-dimensional covariance matrices. \textit{Journal of Multivariate Analysis}, v. 88, n. 2, p. 365--411, 2004.
+
 
 \bibitem{tibshirani1996}
 TIBSHIRANI, R. Regression Shrinkage and Selection via the Lasso. \textit{Journal of the Royal Statistical Society: Series B}, v. 58, n. 1, p. 267--288, 1996.
@@ -781,6 +970,12 @@ FRIEDMAN, J. H. Greedy Function Approximation: A Gradient Boosting Machine. \tex
 
 \bibitem{chen2016}
 CHEN, T.; GUESTRIN, C. XGBoost: A Scalable Tree Boosting System. In: \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016.
+
+\bibitem{liu2010}
+LIU, S.; XU, R. \textit{The Effects of Risk Aversion on Optimization}. MSCI Barra Research Paper No. 2010-06, 2010.
+
+\bibitem{bodnar2015}
+BODNAR, T.; PAROLO, S.; SCHMID, W. Determination and Estimation of Risk Aversion Coefficients. Working Paper, Stockholm University, 2015.
 
 \end{thebibliography}
 
