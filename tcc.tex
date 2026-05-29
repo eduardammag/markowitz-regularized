@@ -1,9 +1,8 @@
-\documentclass[12pt]{report}
+\documentclass[12pt,a4paper]{report}
 
 % ------------------------------------------------
 % PACOTES
 % ------------------------------------------------
-
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[brazil]{babel}
@@ -11,421 +10,778 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage{longtable}
 \usepackage{float}
 \usepackage{setspace}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\geometry{
+    left=3cm,
+    right=2cm,
+    top=3cm,
+    bottom=2cm
+}
 
 \onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.2cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=blue
+}
 
 % ------------------------------------------------
 % INFORMAÇÕES DO TRABALHO
 % ------------------------------------------------
-
-\title{Alocação Adaptativa de Portfólio Utilizando Aprendizado de Máquina e Otimização Média-Variância}
-\author{Maria Eduarda Mesquita Magalhães}
-\date{2026}
+\newcommand{\instituicao}{FGV EMAp}
+\newcommand{\curso}{Data Science \& Artificial Intelligence}
+\newcommand{\autora}{Maria Eduarda Mesquita Magalhães}
+\newcommand{\titulo}{Otimização de Portfólios com Aprendizado de Máquina e Markowitz Regularizado}
+\newcommand{\orientador}{Nome do(a) orientador(a)}
+\newcommand{\local}{Rio de Janeiro}
+\newcommand{\ano}{2026}
 
 % ------------------------------------------------
 % DOCUMENTO
 % ------------------------------------------------
-
 \begin{document}
 
-\maketitle
+% =================================================
+% CAPA
+% =================================================
+\begin{titlepage}
+    \centering
+
+    \vspace*{0.5cm}
+
+    % Espaço reservado para a logo da faculdade.
+    % Substitua o arquivo abaixo pelo caminho correto da logo.
+    % Exemplo: \includegraphics[width=0.28\textwidth]{figures/logo_fgv.png}
+    \fbox{
+        \begin{minipage}[c][3cm][c]{0.45\textwidth}
+            \centering
+            Espaço para a logo da faculdade
+        \end{minipage}
+    }
+
+    \vspace{1.5cm}
+
+    {\large \instituicao \par}
+    {\large \curso \par}
+
+    \vfill
+
+    {\Large \textbf{\titulo} \par}
+
+    \vspace{2cm}
+
+    {\large \autora \par}
+
+    \vfill
+
+    \begin{flushright}
+    \begin{minipage}{0.55\textwidth}
+    Trabalho de Conclusão de Curso apresentado à \instituicao\ como requisito parcial para obtenção do grau em \curso.
+
+    \vspace{0.3cm}
+    Orientador(a): \orientador
+    \end{minipage}
+    \end{flushright}
+
+    \vfill
+
+    {\local \par}
+    {\ano \par}
+\end{titlepage}
+
+% =================================================
+% RESUMO
+% =================================================
+\chapter*{Resumo}
+\addcontentsline{toc}{chapter}{Resumo}
+
+Este trabalho investiga se modelos de aprendizado de máquina podem melhorar a construção de portfólios quando combinados com a otimização média-variância de Markowitz. A principal dificuldade prática da abordagem clássica está na estimação dos retornos esperados, uma vez que pequenas variações nessas estimativas podem produzir grandes alterações nos pesos ótimos. Para estudar esse problema, é proposto um pipeline quantitativo que utiliza modelos supervisionados para prever retornos esperados de ações brasileiras e, em seguida, aplica uma otimização de Markowitz regularizada para determinar os pesos da carteira.
+
+O universo empírico é composto por vinte empresas brasileiras grandes, líquidas e consolidadas, com histórico disponível no Yahoo Finance ao longo do período analisado. São avaliados modelos lineares regularizados, como Lasso, Ridge e Elastic Net, modelos não lineares, como Random Forest, Gradient Boosting e XGBoost, além de uma média histórica como baseline preditivo. A matriz de covariância é estimada pelo método de Ledoit-Wolf, e as carteiras são avaliadas por meio de backtesting com janela móvel, rebalanceamento aproximadamente mensal, restrição de venda a descoberto e limite máximo de peso por ativo.
+
+Os resultados são comparados com dois benchmarks: uma carteira igualmente ponderada e o índice Ibovespa. As métricas de avaliação incluem retorno acumulado, índice de Sharpe, máximo drawdown, turnover, erro médio absoluto, erro quadrático médio e acurácia direcional. O trabalho também discute diagnósticos importantes do experimento, como a correta anualização do Sharpe, o alinhamento entre janelas de treino e teste, a sensibilidade a custos de transação e a concentração dos pesos.
+
+\textbf{Palavras-chave:} otimização de portfólios; Markowitz; aprendizado de máquina; Lasso; XGBoost; backtesting; mercado brasileiro.
+
+\newpage
 
 \tableofcontents
-
 \newpage
 
 % =================================================
 % 1 INTRODUÇÃO
 % =================================================
-
 \chapter{Introdução}
 
 \section{Motivação}
 
-A alocação de portfólio é um problema central em finanças quantitativas. Os investidores buscam distribuir seu capital entre diferentes ativos de forma a equilibrar retorno esperado e risco.
+A construção de portfólios é um dos problemas centrais em finanças quantitativas. Investidores buscam distribuir capital entre diferentes ativos de modo a obter retorno compatível com seu apetite a risco. Desde o trabalho seminal de Markowitz, a alocação média-variância tornou-se uma das principais formulações matemáticas para esse problema, pois oferece uma estrutura clara para relacionar retorno esperado, risco e diversificação.
 
-Ao longo das últimas décadas, a gestão de investimentos passou por transformações significativas impulsionadas pelo avanço dos métodos quantitativos e das técnicas computacionais. Em particular, os modelos de aprendizado de máquina têm sido cada vez mais utilizados nos mercados financeiros para melhorar previsões e apoiar processos de tomada de decisão.
+Apesar de sua importância teórica, a aplicação prática da teoria de Markowitz apresenta dificuldades relevantes. A mais conhecida é a sensibilidade da solução aos parâmetros de entrada. Em particular, o vetor de retornos esperados é difícil de estimar e, quando estimado com ruído, pode gerar carteiras instáveis, concentradas ou pouco robustas fora da amostra.
 
-Apesar desses avanços, muitas técnicas de construção de portfólio ainda se baseiam em estruturas clássicas, como a Teoria Moderna do Portfólio proposta por Harry Markowitz.
+Nos últimos anos, modelos de aprendizado de máquina passaram a ser utilizados em finanças para previsão de retornos, classificação de ativos, modelagem de risco e detecção de padrões em séries temporais. Esses modelos oferecem flexibilidade para explorar relações não lineares e interações entre variáveis, mas também trazem riscos de sobreajuste, especialmente em mercados financeiros, onde o sinal preditivo costuma ser fraco.
 
-\section{Teoria Moderna do Portfólio}
+Diante disso, este trabalho investiga uma pergunta aplicada:
 
-A Teoria Moderna do Portfólio (Modern Portfolio Theory -- MPT), introduzida por Harry Markowitz, fornece uma estrutura matemática para construir portfólios que maximizem o retorno esperado para um determinado nível de risco.
+\begin{quote}
+Modelos de aprendizado de máquina melhoram a estimação de retornos esperados e, quando combinados com Markowitz regularizado, geram carteiras superiores a estratégias tradicionais?
+\end{quote}
 
-O problema clássico de otimização média-variância é definido por:
+\section{Objetivos}
 
-\begin{equation}
-\min_w w^T \Sigma w
-\end{equation}
+O objetivo geral deste trabalho é avaliar o desempenho de carteiras construídas a partir de previsões de retornos geradas por modelos de aprendizado de máquina e otimizadas por uma formulação regularizada de Markowitz.
 
-sujeito a:
+Os objetivos específicos são:
 
-\begin{equation}
-w^T \mu = \mu_p
-\end{equation}
-
-onde:
-
-\begin{itemize}
-\item $w$ representa o vetor de pesos do portfólio;
-\item $\Sigma$ é a matriz de covariância dos retornos dos ativos;
-\item $\mu$ é o vetor de retornos esperados;
-\item $\mu_p$ é o retorno alvo do portfólio.
-\end{itemize}
-
-\section{Problema de Pesquisa}
-
-Embora a otimização média-variância seja teoricamente elegante, seu desempenho depende fortemente da qualidade das estimativas dos retornos esperados e das covariâncias.
-
-Isso leva à questão central deste trabalho:
-
-\textit{Modelos de aprendizado de máquina podem melhorar a alocação de portfólio em relação à otimização média-variância tradicional?}
+\begin{enumerate}
+    \item construir uma base de retornos de ações brasileiras grandes e consolidadas;
+    \item implementar modelos preditivos para estimar retornos esperados;
+    \item estimar a matriz de covariância dos ativos por Ledoit-Wolf;
+    \item resolver uma otimização de Markowitz com restrições práticas;
+    \item comparar os resultados com uma carteira igualmente ponderada e com o Ibovespa;
+    \item avaliar métricas financeiras e preditivas;
+    \item diagnosticar possíveis fontes de distorção, como anualização incorreta, vazamento temporal, custos de transação e concentração excessiva.
+\end{enumerate}
 
 \section{Contribuição}
 
-Esta dissertação propõe uma estrutura híbrida que combina modelos de aprendizado de máquina com técnicas clássicas de otimização de portfólio.
-
-O pipeline proposto consiste em:
-
-\begin{enumerate}
-\item Utilizar modelos de aprendizado de máquina para prever retornos esperados dos ativos;
-\item Estimar a matriz de covariância dos retornos;
-\item Aplicar a otimização média-variância para determinar os pesos do portfólio;
-\item Comparar o desempenho com métodos tradicionais de alocação.
-\end{enumerate}
-
-\newpage
+A contribuição principal do trabalho é uma implementação empírica completa de um pipeline de alocação de portfólio que conecta previsão supervisionada, estimação de risco, otimização convexa e backtesting fora da amostra. O trabalho não busca apenas identificar qual modelo apresenta maior retorno, mas também discutir se ganhos preditivos se traduzem em ganhos financeiros. Essa distinção é importante porque um modelo com menor erro de previsão não necessariamente produz a melhor carteira.
 
 % =================================================
-% 2 REVISÃO DA LITERATURA
+% 2 FUNDAMENTAÇÃO TEÓRICA
 % =================================================
+\chapter{Fundamentação Teórica}
 
-\chapter{Revisão da Literatura}
+\section{Retornos Financeiros}
 
-\section{Teoria Clássica de Portfólios}
-
-A otimização média-variância representa uma das estruturas mais influentes da economia financeira. Ela formaliza a relação entre risco e retorno por meio do conceito de fronteira eficiente.
-
-A fronteira eficiente representa o conjunto de portfólios que alcançam o maior retorno esperado para um determinado nível de risco.
-
-\section{Índice de Sharpe e CAPM}
-
-William F. Sharpe introduziu o Índice de Sharpe como uma medida de retorno ajustado ao risco:
+Seja $P_{i,t}$ o preço do ativo $i$ no instante $t$. O retorno simples diário é definido por:
 
 \begin{equation}
-S = \frac{R_p - R_f}{\sigma_p}
+r_{i,t} = \frac{P_{i,t}}{P_{i,t-1}} - 1.
 \end{equation}
 
-onde:
+O vetor de retornos dos $N$ ativos no instante $t$ é:
 
-\begin{itemize}
-\item $R_p$ representa o retorno do portfólio;
-\item $R_f$ representa a taxa livre de risco;
-\item $\sigma_p$ representa a volatilidade do portfólio.
-\end{itemize}
+\begin{equation}
+\mathbf{r}_t =
+\begin{bmatrix}
+r_{1,t} & r_{2,t} & \cdots & r_{N,t}
+\end{bmatrix}^{T}.
+\end{equation}
 
-O Modelo de Precificação de Ativos Financeiros (CAPM) estende essas ideias ao relacionar retornos esperados ao risco sistemático de mercado.
+Neste trabalho, os preços são transformados em retornos antes da modelagem. Essa transformação é usual porque retornos são mais diretamente relacionados ao ganho financeiro e tendem a apresentar propriedades estatísticas mais estáveis do que preços.
 
-\section{Limitações da Otimização Média-Variância}
+\section{Teoria Média-Variância de Markowitz}
 
-Apesar de sua elegância teórica, a abordagem de Markowitz apresenta diversas limitações.
+A teoria média-variância propõe que um investidor escolha os pesos de um portfólio considerando o retorno esperado e o risco. Seja $\mathbf{w}$ o vetor de pesos da carteira, $\boldsymbol{\mu}$ o vetor de retornos esperados e $\Sigma$ a matriz de covariância dos retornos. O retorno esperado da carteira é:
 
-\subsection{Erro de Estimação}
+\begin{equation}
+\mu_p = \mathbf{w}^{T}\boldsymbol{\mu},
+\end{equation}
 
-Os retornos esperados são notoriamente difíceis de estimar. Pequenos erros podem gerar grandes mudanças nos pesos ótimos dos ativos.
+e a variância da carteira é:
 
-\subsection{Sobreajuste (Overfitting)}
+\begin{equation}
+\sigma_p^2 = \mathbf{w}^{T}\Sigma\mathbf{w}.
+\end{equation}
 
-A otimização pode amplificar ruídos estatísticos presentes nos dados, produzindo alocações extremas e pouco robustas.
+Na formulação clássica, busca-se minimizar a variância para um retorno alvo ou maximizar uma função de utilidade que penaliza o risco. A formulação usada neste trabalho é uma versão regularizada:
 
-\subsection{Instabilidade das Matrizes de Covariância}
+\begin{equation}
+\max_{\mathbf{w}}
+\quad
+\mathbf{w}^{T}\hat{\boldsymbol{\mu}}
+- \gamma \mathbf{w}^{T}\hat{\Sigma}\mathbf{w}
+- \lambda \|\mathbf{w}\|_1
+- \lambda \|\mathbf{w}\|_2,
+\end{equation}
 
-As correlações entre ativos variam ao longo do tempo, tornando a estimação da matriz de covariância instável.
+sujeita a:
 
-\subsection{Distribuições Não Normais}
+\begin{align}
+\sum_{i=1}^{N} w_i &= 1, \\
+w_i &\geq 0, \quad i=1,\ldots,N, \\
+w_i &\leq 0.15, \quad i=1,\ldots,N.
+\end{align}
 
-Os retornos financeiros frequentemente apresentam assimetria e caudas pesadas, violando a hipótese de normalidade assumida em muitos modelos clássicos.
+O termo $\gamma$ controla a aversão a risco. Quanto maior $\gamma$, maior a penalização sobre a variância da carteira. O termo $\lambda$ controla a regularização dos pesos. A penalização $\ell_2$ reduz soluções muito extremas, enquanto a penalização $\ell_1$ desencoraja alocações desnecessariamente complexas. A restrição $w_i \leq 0.15$ impede que a carteira concentre mais de 15\% do capital em um único ativo.
 
-\newpage
+\section{Estimação da Matriz de Covariância}
+
+A matriz de covariância é estimada pelo método de Ledoit-Wolf. A ideia central é combinar a matriz de covariância amostral com uma matriz estruturada mais estável. De forma geral:
+
+\begin{equation}
+\hat{\Sigma}_{LW}
+=
+\delta F
++
+(1-\delta)S,
+\end{equation}
+
+em que $S$ é a matriz de covariância amostral, $F$ é uma matriz alvo estruturada e $\delta$ é o parâmetro de shrinkage. Esse procedimento reduz instabilidades numéricas, especialmente quando o número de ativos é relevante em relação ao tamanho da janela de treino.
+
+\section{Índice de Sharpe}
+
+O índice de Sharpe mede retorno em excesso por unidade de risco:
+
+\begin{equation}
+S =
+\frac{\bar{R}_p - R_f}{\sigma_p}.
+\end{equation}
+
+Como o backtest deste trabalho gera um retorno composto para cada janela de teste de aproximadamente 21 pregões, a anualização deve respeitar essa frequência. Assim, define-se:
+
+\begin{equation}
+K = \frac{252}{21} = 12,
+\end{equation}
+
+e o Sharpe anualizado é calculado como:
+
+\begin{equation}
+S_{anual}
+=
+\sqrt{K}
+\frac{\bar{R}_p - R_{f,K}}{\sigma_p},
+\end{equation}
+
+em que:
+
+\begin{equation}
+R_{f,K} = (1 + R_f)^{1/K} - 1.
+\end{equation}
+
+Essa correção é importante. Usar $\sqrt{252}$ sobre retornos mensais superestima artificialmente o Sharpe.
 
 % =================================================
-% 3 APRENDIZADO DE MÁQUINA EM FINANÇAS
+% 3 MODELOS DE APRENDIZADO DE MÁQUINA
 % =================================================
+\chapter{Modelos de Aprendizado de Máquina}
 
-\chapter{Aprendizado de Máquina em Finanças}
+\section{Formulação Supervisionada}
 
-As técnicas de aprendizado de máquina têm recebido crescente atenção em aplicações financeiras, incluindo previsão de retornos, modelagem de risco e seleção de ativos.
+Os modelos são treinados para prever o vetor de retornos esperados do próximo período a partir de informações históricas. Em cada janela de treino, constrói-se uma matriz de atributos $\mathbf{X}$ e uma matriz de respostas $\mathbf{Y}$.
 
-\section{Aprendizado Supervisionado}
-
-No aprendizado supervisionado, os modelos são treinados utilizando dados históricos compostos por variáveis explicativas e variáveis-alvo.
-
-Fluxo típico:
+As variáveis explicativas utilizadas são:
 
 \begin{itemize}
-\item Conjunto de treinamento;
-\item Conjunto de validação;
-\item Conjunto de teste.
+    \item retornos defasados de 1, 2, 3 e 5 dias;
+    \item média móvel de 20 dias;
+    \item volatilidade móvel de 20 dias.
 \end{itemize}
 
-\section{Modelos}
+Para cada ativo, o alvo é o retorno observado no período seguinte. O objetivo é aproximar:
 
-Diversos modelos podem ser utilizados para tarefas de previsão financeira.
+\begin{equation}
+\hat{\boldsymbol{\mu}}_{t+1}
+=
+f(\mathbf{X}_t),
+\end{equation}
 
-\subsection{Modelos Lineares}
+em que $f$ representa o modelo preditivo.
 
-\begin{itemize}
-\item Regressão Linear;
-\item Regressão Ridge;
-\item Regressão Lasso.
-\end{itemize}
+\section{Média Histórica}
 
-\subsection{Modelos Não Lineares}
+A média histórica é usada como baseline preditivo. Para cada ativo $i$, a previsão é:
 
-\begin{itemize}
-\item Random Forest;
-\item Gradient Boosting.
-\end{itemize}
+\begin{equation}
+\hat{\mu}_i =
+\frac{1}{T}
+\sum_{t=1}^{T} r_{i,t}.
+\end{equation}
 
-\subsection{Aprendizado Profundo}
+Esse modelo não aprende relações entre atributos; ele assume que a média passada é a melhor estimativa para o retorno futuro.
 
-\begin{itemize}
-\item Redes Neurais;
-\item Redes Long Short-Term Memory (LSTM).
-\end{itemize}
+\section{Lasso}
 
-\newpage
+O Lasso é uma regressão linear regularizada por penalização $\ell_1$. Para um problema univariado, sua função objetivo é:
+
+\begin{equation}
+\min_{\beta}
+\sum_{t=1}^{T}
+(y_t - \mathbf{x}_t^T\beta)^2
++
+\alpha \|\beta\|_1.
+\end{equation}
+
+A penalização $\ell_1$ pode zerar coeficientes, funcionando como seleção automática de variáveis. No contexto deste trabalho, isso é útil porque os atributos de retornos defasados, médias móveis e volatilidades podem conter ruído.
+
+\section{Ridge}
+
+O Ridge usa penalização $\ell_2$:
+
+\begin{equation}
+\min_{\beta}
+\sum_{t=1}^{T}
+(y_t - \mathbf{x}_t^T\beta)^2
++
+\alpha \|\beta\|_2^2.
+\end{equation}
+
+Ao contrário do Lasso, o Ridge não tende a zerar coeficientes, mas reduz sua magnitude. Ele é especialmente útil quando os atributos são correlacionados.
+
+\section{Elastic Net}
+
+O Elastic Net combina penalizações $\ell_1$ e $\ell_2$:
+
+\begin{equation}
+\min_{\beta}
+\sum_{t=1}^{T}
+(y_t - \mathbf{x}_t^T\beta)^2
++
+\alpha
+\left[
+\rho \|\beta\|_1
++
+(1-\rho)\|\beta\|_2^2
+\right].
+\end{equation}
+
+Neste trabalho, utiliza-se $\alpha=0.001$ e $\rho=0.5$, de modo que o modelo fique entre o comportamento do Lasso e do Ridge.
+
+\section{Random Forest}
+
+Random Forest é um método baseado em árvores de decisão. O modelo combina diversas árvores treinadas em amostras e subconjuntos de variáveis, reduzindo variância e capturando relações não lineares. A previsão final é obtida pela média das previsões das árvores:
+
+\begin{equation}
+\hat{y}
+=
+\frac{1}{B}
+\sum_{b=1}^{B}
+T_b(\mathbf{x}),
+\end{equation}
+
+em que $T_b$ é a árvore $b$ e $B$ é o número total de árvores.
+
+\section{Gradient Boosting e XGBoost}
+
+Modelos de boosting constroem árvores sequencialmente, de modo que cada nova árvore tenta corrigir os erros das anteriores. De forma simplificada:
+
+\begin{equation}
+F_m(\mathbf{x})
+=
+F_{m-1}(\mathbf{x})
++
+\eta h_m(\mathbf{x}),
+\end{equation}
+
+em que $h_m$ é a árvore adicionada na etapa $m$ e $\eta$ é a taxa de aprendizado. O XGBoost é uma implementação eficiente e regularizada de gradient boosting, amplamente utilizada em problemas preditivos estruturados.
 
 % =================================================
 % 4 METODOLOGIA
 % =================================================
-
 \chapter{Metodologia}
 
-\section{Dados}
+\section{Universo de Ativos}
 
-A base de dados consiste em informações históricas de um conjunto de ativos financeiros.
+O universo de ativos é composto por vinte empresas brasileiras grandes, consolidadas e líquidas, com histórico disponível no Yahoo Finance desde o início da amostra. A escolha busca representar diferentes setores da economia brasileira, evitando que os resultados sejam dominados por poucas empresas ou por um único setor.
 
-Possível universo de ativos:
+\begin{longtable}{ll}
+\caption{Empresas utilizadas no experimento} \\
+\toprule
+Ticker & Empresa \\
+\midrule
+\endfirsthead
+\toprule
+Ticker & Empresa \\
+\midrule
+\endhead
+PETR4.SA & Petrobras \\
+VALE3.SA & Vale \\
+ITUB4.SA & Itaú Unibanco \\
+BPAC11.SA & BTG Pactual \\
+ABEV3.SA & Ambev \\
+WEGE3.SA & WEG \\
+BBAS3.SA & Banco do Brasil \\
+BBDC4.SA & Bradesco \\
+SANB11.SA & Santander Brasil \\
+B3SA3.SA & B3 \\
+SUZB3.SA & Suzano \\
+VIVT3.SA & Telefônica Brasil \\
+EQTL3.SA & Equatorial Energia \\
+RENT3.SA & Localiza \\
+RADL3.SA & Raia Drogasil \\
+PRIO3.SA & PRIO \\
+GGBR4.SA & Gerdau \\
+EGIE3.SA & Engie Brasil \\
+KLBN11.SA & Klabin \\
+BBSE3.SA & BB Seguridade \\
+\bottomrule
+\end{longtable}
 
-\begin{itemize}
-\item Ações do mercado brasileiro (IBOVESPA);
-\item ETFs globais.
-\end{itemize}
+A inclusão dessas empresas é motivada por três critérios: relevância econômica, liquidez e disponibilidade de dados. Empresas sem série histórica completa ou com falhas no Yahoo Finance foram evitadas, pois poderiam comprometer o backtest.
 
-As fontes de dados incluem:
+\section{Período Amostral}
 
-\begin{itemize}
-\item Yahoo Finance;
-\item Kaggle;
-\item Quandl.
-\end{itemize}
+O período analisado vai de 31 de janeiro de 2020 a 31 de janeiro de 2026. Esse intervalo inclui diferentes regimes de mercado, como a crise da Covid-19, recuperação subsequente, períodos de juros elevados e mudanças relevantes no ambiente macroeconômico brasileiro.
 
-O período amostral considerado neste estudo compreende os anos de 2010 a 2024.
+Embora esse período seja relativamente recente, ele é adequado para avaliar a performance das estratégias em um ambiente de alta volatilidade e mudanças estruturais. Uma extensão natural seria ampliar a amostra para anos anteriores, desde que todos os ativos apresentem dados consistentes.
 
-\section{Engenharia de Atributos}
+\section{Configuração Experimental}
 
-Diversas variáveis financeiras são construídas para alimentar os modelos de aprendizado de máquina.
-
-Exemplos:
-
-\begin{itemize}
-\item Retornos passados;
-\item Momentum de 1, 3 e 12 meses;
-\item Volatilidade móvel;
-\item Indicadores técnicos (RSI e médias móveis);
-\item Variáveis macroeconômicas.
-\end{itemize}
-
-\section{Modelos de Aprendizado de Máquina}
-
-O objetivo dos modelos é prever retornos futuros esperados:
-
-\begin{equation}
-E[r_{i,t+1}]
-\end{equation}
-
-Os seguintes modelos são avaliados:
-
-\begin{itemize}
-\item Regressão Linear;
-\item Random Forest;
-\item Gradient Boosting.
-\end{itemize}
-
-\section{Construção do Portfólio}
-
-O processo de construção do portfólio consiste em três etapas principais:
-
-\begin{enumerate}
-\item Previsão dos retornos esperados por meio de aprendizado de máquina;
-\item Estimação da matriz de covariância;
-\item Resolução do problema de otimização de Markowitz.
-\end{enumerate}
-
-Uma formulação possível consiste em maximizar o Índice de Sharpe:
-
-\begin{equation}
-\max_w \frac{w^T \hat{\mu}}
-{\sqrt{w^T \Sigma w}}
-\end{equation}
-
-\section{Estratégia de Backtesting}
-
-Uma abordagem de janela móvel (rolling window) é utilizada para avaliação fora da amostra.
-
-Exemplo:
-
-\begin{itemize}
-\item Período de treinamento: 2010--2016;
-\item Período de teste: 2017.
-\end{itemize}
-
-A janela é então deslocada ao longo do tempo.
-
-\newpage
-
-% =================================================
-% 5 AVALIAÇÃO DE DESEMPENHO
-% =================================================
-
-\chapter{Avaliação de Desempenho}
-
-A estratégia proposta é comparada com diferentes portfólios de referência.
-
-\section{Benchmarks}
-
-\begin{itemize}
-\item Portfólio igualmente ponderado;
-\item Portfólio clássico de Markowitz;
-\item Portfólio Aprendizado de Máquina + Markowitz.
-\end{itemize}
-
-\section{Métricas de Avaliação}
-
-\subsection{Índice de Sharpe}
-
-\begin{equation}
-S = \frac{R_p - R_f}{\sigma_p}
-\end{equation}
-
-\subsection{Máximo Drawdown}
-
-O máximo drawdown mede a maior perda acumulada entre um pico e um vale durante o período analisado.
-
-\subsection{Retorno Acumulado}
-
-Representa o crescimento total do portfólio ao longo do horizonte de investimento.
-
-\subsection{Volatilidade}
-
-Medida pelo desvio-padrão dos retornos do portfólio.
-
-\newpage
-
-% =================================================
-% 6 RESULTADOS EMPÍRICOS
-% =================================================
-
-\chapter{Resultados Empíricos}
-
-Esta seção apresenta os resultados obtidos nos experimentos de backtesting.
-
-\section{Fronteira Eficiente}
-
-Inserir gráfico da fronteira eficiente.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.7\textwidth]{efficient_frontier.png}
-\caption{Fronteira Eficiente}
-\end{figure}
-
-\section{Retornos Acumulados}
-
-Inserir gráfico de retornos acumulados.
-
-\section{Tabela de Desempenho}
+Os principais parâmetros do experimento são:
 
 \begin{table}[H]
 \centering
-\begin{tabular}{lcc}
+\begin{tabular}{ll}
 \toprule
-Modelo & Índice de Sharpe & Volatilidade \\
+Parâmetro & Valor \\
 \midrule
-Pesos Iguais & 0.70 & 0.18 \\
-Markowitz & 0.80 & 0.16 \\
-Aprendizado de Máquina + Markowitz & 1.10 & 0.15 \\
+Número de ativos & 20 \\
+Janela de treino & 252 pregões \\
+Janela de teste & 21 pregões \\
+Rebalanceamento & Aproximadamente mensal \\
+Venda a descoberto & Não permitida \\
+Peso máximo por ativo & 15\% \\
+$\gamma$ & 5 \\
+$\lambda$ & 0.1 \\
+Custo de transação & 0.1\% por unidade de turnover \\
+Covariância & Ledoit-Wolf \\
 \bottomrule
 \end{tabular}
-\caption{Comparação de desempenho}
+\caption{Configuração principal do experimento}
 \end{table}
 
-\newpage
+\section{Justificativa dos Hiperparâmetros}
 
-% =================================================
-% 7 TESTES DE ROBUSTEZ
-% =================================================
+O parâmetro $\gamma=5$ representa uma aversão a risco intermediária. Valores muito baixos tenderiam a priorizar excessivamente as previsões de retorno, que são ruidosas em finanças. Valores muito altos poderiam produzir carteiras excessivamente conservadoras. Portanto, $\gamma=5$ é escolhido como valor central para o experimento principal.
 
-\chapter{Testes de Robustez}
+O parâmetro $\lambda=0.1$ controla a regularização dos pesos. Sua função é reduzir instabilidade e evitar alocações excessivamente sensíveis às previsões. A escolha de um valor moderado é coerente com o objetivo de construir carteiras mais robustas.
 
-Experimentos adicionais são realizados para avaliar a robustez dos resultados.
+O limite máximo de 15\% por ativo é adotado porque o universo contém 20 ações. Sem esse limite, a otimização poderia concentrar capital em poucos ativos, especialmente quando as previsões de retorno fossem muito otimistas para uma empresa específica. Com 20 ativos, um limite de 15\% ainda permite convicção em determinados nomes, mas impede concentração extrema.
+
+\section{Algoritmo do Backtest}
+
+O processo de backtest segue uma estrutura de janela móvel. Em cada etapa:
+
+\begin{enumerate}
+    \item seleciona-se uma janela de treino com 252 pregões;
+    \item constroem-se as variáveis explicativas;
+    \item treina-se o modelo preditivo;
+    \item prevê-se o vetor de retornos esperados $\hat{\boldsymbol{\mu}}$;
+    \item estima-se a matriz de covariância $\hat{\Sigma}$ com Ledoit-Wolf;
+    \item resolve-se a otimização de Markowitz regularizada;
+    \item aplica-se a carteira nos 21 pregões seguintes;
+    \item registra-se o retorno composto da carteira;
+    \item desloca-se a janela para o próximo período.
+\end{enumerate}
+
+O retorno da carteira no período de teste é:
+
+\begin{equation}
+R_{p,t}
+=
+\prod_{\tau \in \mathcal{T}_t}
+\left(1 + \mathbf{r}_{\tau}^{T}\mathbf{w}_t\right)
+- 1,
+\end{equation}
+
+em que $\mathcal{T}_t$ representa os dias da janela de teste.
+
+Quando há rebalanceamento, aplica-se custo de transação proporcional ao turnover:
+
+\begin{equation}
+TO_t =
+\sum_{i=1}^{N}
+|w_{i,t} - w_{i,t-1}|,
+\end{equation}
+
+\begin{equation}
+R_{p,t}^{net}
+=
+R_{p,t}
+-
+c \cdot TO_t,
+\end{equation}
+
+em que $c=0.001$ representa custo de 0.1\%.
+
+\section{Benchmarks}
+
+São utilizados dois benchmarks:
 
 \begin{itemize}
-\item Diferentes períodos de análise;
-\item Diferentes universos de ativos;
-\item Inclusão de custos de transação.
+    \item \textbf{Equal Weight}: carteira igualmente ponderada entre os 20 ativos;
+    \item \textbf{Ibovespa}: principal índice do mercado acionário brasileiro.
 \end{itemize}
 
-\newpage
+Para garantir comparabilidade, os retornos dos benchmarks são agregados nas mesmas janelas de teste de 21 pregões usadas pelas estratégias otimizadas.
 
 % =================================================
-% 8 DISCUSSÃO
+% 5 MÉTRICAS DE AVALIAÇÃO
 % =================================================
+\chapter{Métricas de Avaliação}
 
+\section{Métricas Financeiras}
+
+As métricas financeiras utilizadas são:
+
+\begin{itemize}
+    \item retorno acumulado;
+    \item índice de Sharpe anualizado com frequência correta;
+    \item máximo drawdown;
+    \item turnover médio;
+    \item pesos médios por ativo.
+\end{itemize}
+
+O retorno acumulado ao longo de $T$ períodos é:
+
+\begin{equation}
+R_{acum}
+=
+\prod_{t=1}^{T}
+(1 + R_{p,t})
+- 1.
+\end{equation}
+
+O máximo drawdown é:
+
+\begin{equation}
+MDD
+=
+\min_t
+\left(
+\frac{V_t - \max_{\tau \leq t} V_{\tau}}
+{\max_{\tau \leq t} V_{\tau}}
+\right),
+\end{equation}
+
+em que $V_t$ é o valor acumulado da carteira no período $t$.
+
+\section{Métricas Preditivas}
+
+Além da performance financeira, avaliam-se métricas de previsão:
+
+\begin{equation}
+MSE =
+\frac{1}{n}
+\sum_{j=1}^{n}
+(y_j - \hat{y}_j)^2,
+\end{equation}
+
+\begin{equation}
+MAE =
+\frac{1}{n}
+\sum_{j=1}^{n}
+|y_j - \hat{y}_j|,
+\end{equation}
+
+e acurácia direcional:
+
+\begin{equation}
+DA =
+\frac{1}{n}
+\sum_{j=1}^{n}
+\mathbb{1}
+\left[
+\operatorname{sign}(y_j)
+=
+\operatorname{sign}(\hat{y}_j)
+\right].
+\end{equation}
+
+Essa separação é importante porque um bom modelo preditivo não necessariamente gera a melhor carteira. A otimização transforma previsões em pesos, e essa etapa pode amplificar ou reduzir diferenças entre modelos.
+
+% =================================================
+% 6 RESULTADOS
+% =================================================
+\chapter{Resultados}
+
+\section{Tabela de Performance}
+
+A Tabela \ref{tab:performance} deve ser preenchida com os resultados obtidos após a execução final do pipeline com 20 ativos. A tabela deve ser gerada a partir da saída do programa principal.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Estratégia & Sharpe & Retorno acumulado & Drawdown & Turnover \\
+\midrule
+Média histórica + Markowitz & -- & -- & -- & -- \\
+Lasso + Markowitz & -- & -- & -- & -- \\
+Ridge + Markowitz & -- & -- & -- & -- \\
+Elastic Net + Markowitz & -- & -- & -- & -- \\
+Random Forest + Markowitz & -- & -- & -- & -- \\
+Gradient Boosting + Markowitz & -- & -- & -- & -- \\
+XGBoost + Markowitz & -- & -- & -- & -- \\
+Equal Weight & -- & -- & -- & -- \\
+Ibovespa & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\caption{Resumo de performance das estratégias}
+\label{tab:performance}
+\end{table}
+
+\section{Retorno Acumulado}
+
+A Figura \ref{fig:cumulative} apresenta o retorno acumulado das estratégias ao longo do backtest. Esse gráfico permite avaliar a evolução temporal das carteiras e comparar o desempenho dos modelos com os benchmarks.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{output/tcc/cumulative_returns.png}
+\caption{Retorno acumulado das estratégias}
+\label{fig:cumulative}
+\end{figure}
+
+\section{Drawdown}
+
+A Figura \ref{fig:drawdowns} apresenta o drawdown das estratégias. Essa análise é relevante porque duas estratégias podem ter retornos semelhantes, mas riscos de queda muito diferentes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{output/tcc/drawdowns.png}
+\caption{Drawdown das estratégias}
+\label{fig:drawdowns}
+\end{figure}
+
+\section{Risco versus Retorno}
+
+A Figura \ref{fig:riskreturn} apresenta a relação entre retorno médio e volatilidade das estratégias. Estratégias localizadas mais acima e à esquerda apresentam, em geral, melhor relação risco-retorno.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{output/tcc/risk_return.png}
+\caption{Risco versus retorno médio por período}
+\label{fig:riskreturn}
+\end{figure}
+
+\section{Resumo das Métricas}
+
+A Figura \ref{fig:bars} apresenta uma comparação direta entre Sharpe, retorno acumulado e máximo drawdown.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{output/tcc/performance_bars.png}
+\caption{Resumo de métricas de performance}
+\label{fig:bars}
+\end{figure}
+
+\section{Pesos Médios}
+
+A Figura \ref{fig:weights} mostra os pesos médios atribuídos a cada ativo por cada estratégia baseada em Markowitz. Esse gráfico é útil para verificar se os modelos concentram capital em poucos ativos ou se mantêm diversificação razoável.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{output/tcc/average_weights.png}
+\caption{Pesos médios por ativo}
+\label{fig:weights}
+\end{figure}
+
+\section{Diagnósticos do Backtest}
+
+Além das métricas principais, foram realizados diagnósticos para verificar a consistência do experimento. O primeiro diagnóstico avaliou a anualização do Sharpe. Como os retornos do backtest são por janelas de 21 pregões, a anualização correta utiliza aproximadamente 12 períodos por ano, e não 252.
+
+Também foi verificado se havia sobreposição entre janelas de treino e teste. O resultado esperado é:
+
+\begin{equation}
+overlap\_count = 0.
+\end{equation}
+
+Isso indica ausência de vazamento temporal direto entre treino e teste. Por fim, analisou-se a concentração dos pesos e a sensibilidade a custos de transação. Esses diagnósticos são fundamentais para evitar conclusões excessivamente otimistas.
+
+% =================================================
+% 7 DISCUSSÃO
+% =================================================
 \chapter{Discussão}
 
-Este capítulo interpreta os resultados empíricos obtidos.
+O objetivo do experimento não é demonstrar que modelos de aprendizado de máquina sempre superam métodos tradicionais. Em finanças, retornos são ruidosos, não estacionários e difíceis de prever. Portanto, uma conclusão madura deve considerar tanto os ganhos quanto as limitações dos modelos.
 
-Questões abordadas:
+Caso os modelos regularizados, como Lasso e Elastic Net, apresentem desempenho competitivo, isso pode indicar que previsões simples e controladas são mais robustas do que modelos muito flexíveis. Por outro lado, se modelos como XGBoost ou Gradient Boosting não apresentarem superioridade clara, isso pode ser interpretado como evidência de que maior complexidade não garante melhor alocação.
+
+Outro ponto importante é a comparação com a carteira igualmente ponderada. Se o equal weight apresentar desempenho próximo ao das estratégias otimizadas, isso reforça a dificuldade prática de superar benchmarks simples. Tal resultado não invalida o trabalho; ao contrário, evidencia uma característica conhecida da literatura de portfólios: estratégias simples podem ser extremamente competitivas fora da amostra.
+
+A comparação com o Ibovespa deve ser interpretada com cautela. O Ibovespa representa uma carteira ampla de mercado, enquanto as estratégias deste trabalho operam sobre um universo selecionado de 20 empresas grandes e consolidadas. Portanto, superar o Ibovespa indica bom desempenho relativo no período analisado, mas não prova superioridade universal.
+
+% =================================================
+% 8 LIMITAÇÕES E ROBUSTEZ
+% =================================================
+\chapter{Limitações e Análises de Robustez}
+
+\section{Limitações}
+
+As principais limitações do estudo são:
 
 \begin{itemize}
-\item Os modelos de aprendizado de máquina melhoram a previsão de retornos?
-\item Os portfólios tornam-se mais estáveis?
-\item O risco é reduzido?
+    \item uso de um período histórico relativamente recente;
+    \item dependência dos dados do Yahoo Finance;
+    \item número limitado de ativos;
+    \item ausência de variáveis macroeconômicas;
+    \item hiperparâmetros fixos no experimento principal;
+    \item custo de transação simplificado;
+    \item uso de modelos preditivos treinados apenas com atributos derivados dos próprios retornos.
 \end{itemize}
 
-\newpage
+\section{Análises de Robustez Recomendadas}
+
+Como extensão, recomenda-se avaliar:
+
+\begin{enumerate}
+    \item diferentes valores de $\gamma$, como $\{1,5,10\}$;
+    \item diferentes valores de $\lambda$, como $\{0.01,0.1,1\}$;
+    \item janelas de treino maiores, como 504 pregões;
+    \item diferentes universos de ativos;
+    \item diferentes níveis de custo de transação;
+    \item comparação entre covariância Ledoit-Wolf e covariância amostral.
+\end{enumerate}
+
+Essas análises ajudam a verificar se os resultados dependem fortemente de uma configuração específica.
 
 % =================================================
 % 9 CONCLUSÃO
 % =================================================
-
 \chapter{Conclusão}
 
-Esta dissertação investigou se modelos de aprendizado de máquina podem melhorar a alocação de portfólio quando combinados com a otimização média-variância.
+Este trabalho apresentou uma estrutura quantitativa para combinar aprendizado de máquina e otimização de portfólios. O pipeline desenvolvido utiliza modelos supervisionados para estimar retornos esperados de ações brasileiras e aplica uma formulação regularizada de Markowitz para determinar os pesos da carteira.
 
-Os resultados sugerem que abordagens híbridas que unem modelos preditivos e técnicas clássicas de otimização podem melhorar o retorno ajustado ao risco.
+A metodologia foi construída para evitar algumas armadilhas comuns em backtests financeiros. As previsões são feitas apenas com dados passados, as janelas de treino e teste não se sobrepõem, os retornos dos benchmarks são agregados na mesma frequência das estratégias, o Sharpe é anualizado de acordo com a periodicidade correta e há restrições práticas de alocação.
 
-\section{Limitações}
+Do ponto de vista conceitual, o trabalho mostra que a relação entre previsão e performance de carteira não é trivial. Modelos com menor erro de previsão podem não produzir as melhores carteiras, pois a etapa de otimização transforma previsões em decisões de alocação sujeitas a risco, covariância, restrições e custos.
 
-\begin{itemize}
-\item Limitações dos dados;
-\item Hipóteses dos modelos;
-\item Custos de transação.
-\end{itemize}
+Como conclusão esperada, o estudo permite avaliar se modelos de aprendizado de máquina geram ganhos relevantes em relação a métodos tradicionais. Caso os ganhos sejam modestos, isso não representa fracasso do experimento, mas sim uma evidência importante sobre a dificuldade de prever retornos e superar estratégias simples em mercados financeiros.
 
-\section{Pesquisas Futuras}
+% =================================================
+% REFERÊNCIAS
+% =================================================
+\begin{thebibliography}{99}
 
-Possíveis extensões incluem:
+\bibitem{markowitz1952}
+MARKOWITZ, H. Portfolio Selection. \textit{The Journal of Finance}, v. 7, n. 1, p. 77--91, 1952.
 
-\begin{itemize}
-\item Modelos de aprendizado de máquina para estimação de covariâncias;
-\item Aprendizado por reforço para alocação de portfólio;
-\item Arquiteturas avançadas de deep learning.
-\end{itemize}
+\bibitem{sharpe1966}
+SHARPE, W. F. Mutual Fund Performance. \textit{The Journal of Business}, v. 39, n. 1, p. 119--138, 1966.
+
+\bibitem{ledoitwolf2004}
+LEDOIT, O.; WOLF, M. A well-conditioned estimator for large-dimensional covariance matrices. \textit{Journal of Multivariate Analysis}, v. 88, n. 2, p. 365--411, 2004.
+
+\bibitem{tibshirani1996}
+TIBSHIRANI, R. Regression Shrinkage and Selection via the Lasso. \textit{Journal of the Royal Statistical Society: Series B}, v. 58, n. 1, p. 267--288, 1996.
+
+\bibitem{hoerl1970}
+HOERL, A. E.; KENNARD, R. W. Ridge Regression: Biased Estimation for Nonorthogonal Problems. \textit{Technometrics}, v. 12, n. 1, p. 55--67, 1970.
+
+\bibitem{zou2005}
+ZOU, H.; HASTIE, T. Regularization and variable selection via the elastic net. \textit{Journal of the Royal Statistical Society: Series B}, v. 67, n. 2, p. 301--320, 2005.
+
+\bibitem{breiman2001}
+BREIMAN, L. Random Forests. \textit{Machine Learning}, v. 45, p. 5--32, 2001.
+
+\bibitem{friedman2001}
+FRIEDMAN, J. H. Greedy Function Approximation: A Gradient Boosting Machine. \textit{The Annals of Statistics}, v. 29, n. 5, p. 1189--1232, 2001.
+
+\bibitem{chen2016}
+CHEN, T.; GUESTRIN, C. XGBoost: A Scalable Tree Boosting System. In: \textit{Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016.
+
+\end{thebibliography}
 
 \end{document}
