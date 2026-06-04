@@ -5,3 +5,7 @@ venv/
 output/
 *.csv
 *.parquet
+*.aux
+*.log
+*.out
+*.toc

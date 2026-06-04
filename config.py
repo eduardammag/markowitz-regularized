@@ -1,12 +1,12 @@
-import os 
+import os
 
-# Define o diretório base do projeto (onde este arquivo está localizado)
+# Define o diretorio base do projeto (onde este arquivo esta localizado).
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 
-# Define o diretório de saída (output) dentro do diretório base
+# Define o diretorio de saida dentro do diretorio base.
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 
-# Cria o diretório de saída caso ele não exista (evita erro se já existir)
+# Cria o diretorio de saida caso ele nao exista.
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Universo de acoes brasileiras no Yahoo Finance.
@@ -16,7 +16,7 @@ TICKERS = [
     "PETR4.SA",   # Petrobras
     "VALE3.SA",   # Vale
     "ITUB4.SA",   # Itau Unibanco
-    "BPAC11.SA",  # BTG Pactual
+    "CMIG4.SA",   # Cemig
     "ABEV3.SA",   # Ambev
     "WEGE3.SA",   # WEG
     "BBAS3.SA",   # Banco do Brasil
@@ -28,23 +28,23 @@ TICKERS = [
     "EQTL3.SA",   # Equatorial
     "RENT3.SA",   # Localiza
     "RADL3.SA",   # Raia Drogasil
-    "PRIO3.SA",   # PRIO
+    "TOTS3.SA",   # Totvs
     "GGBR4.SA",   # Gerdau
     "EGIE3.SA",   # Engie Brasil
-    "KLBN11.SA",  # Klabin
-    "BBSE3.SA",   # BB Seguridade
-]
+    "LREN3.SA",   # Lojas Renner
+    "CSNA3.SA",   # CSN
+    ]
 
-# Data inicial da análise
-START_DATE = "2020-01-31"
+# Data inicial da analise.
+START_DATE = "2010-01-31"
 
-# Data final da análise
+# Data final da analise.
 END_DATE = "2026-01-31"
 
-# Janela de treino (aproximadamente 1 anos de pregão)
+# Janela de treino (aproximadamente 1 ano de pregao).
 TRAIN_WINDOW = 252
 
-# Janela de teste (aproximadamente 1 mês)
+# Janela de teste (aproximadamente 1 mes).
 TEST_WINDOW = 21
 
 # Limite maximo de peso por ativo na carteira.
@@ -67,12 +67,11 @@ models = [
 ]
 
 # Gamma controla a aversao a risco no Markowitz.
-# Usamos poucos valores para comparar baixa, media e alta penalizacao de risco.
-#gammas = [1, 5, 10]
+# O experimento principal usa gamma=5 como configuracao central.
+# Para analise de robustez, pode-se testar: [1, 5, 10].
 gammas = [5]
 
 # Lambda controla a regularizacao dos pesos da carteira.
-# Mantemos poucos valores para evitar uma busca de hiperparametros excessiva.
-#lambdas = [0.01, 0.1, 1]
-
+# O experimento principal usa lambda=0.1 como configuracao central.
+# Para analise de robustez, pode-se testar: [0.01, 0.1, 1].
 lambdas = [0.1]

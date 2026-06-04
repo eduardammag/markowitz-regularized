@@ -45,7 +45,7 @@ precos historicos
 
 O arquivo `config.py` controla o escopo do experimento.
 
-Atualmente, a busca esta reduzida para:
+Atualmente, o experimento principal esta fixado em uma configuracao central:
 
 ```python
 models = [
@@ -57,12 +57,23 @@ models = [
     "gradient_boosting",
     "xgboost",
 ]
+gammas = [5]
+lambdas = [0.1]
+```
+
+Isso gera 7 estrategias baseadas em Markowitz, alem dos benchmarks
+`equal_weight` e `ibov`, deixando a analise mais interpretavel para o TCC.
+
+Para analises de robustez, pode-se rodar uma grade maior:
+
+```python
 gammas = [1, 5, 10]
 lambdas = [0.01, 0.1, 1]
 ```
 
-Isso gera 63 estrategias, em vez de centenas de combinacoes, deixando a analise
-mais interpretavel para o TCC.
+Essa grade maior permite avaliar sensibilidade a aversao a risco e
+regularizacao sem transformar o experimento principal em uma busca extensa de
+hiperparametros.
 
 ## Estrutura
 

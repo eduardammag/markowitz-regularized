@@ -48,7 +48,7 @@ def optimize_portfolio(mu, cov, lambda_reg=0.1, gamma=10):
         # Sem short (apenas posições compradas)
         w >= 0,
 
-        # Limite máximo por ativo (30%)
+        # Limite máximo por ativo definido em config.MAX_WEIGHT.
         w <= MAX_WEIGHT
     ]
 

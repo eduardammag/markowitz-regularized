@@ -20,14 +20,14 @@ def predict(returns):
     X_train, y_train, X_test = make_supervised_dataset(returns)
 
     base_model = GradientBoostingRegressor(
-        n_estimators=150,
-        learning_rate=0.05,
-        max_depth=3,
-        min_samples_leaf=5,
+        n_estimators=50,
+        learning_rate=0.08,
+        max_depth=2,
+        min_samples_leaf=10,
         random_state=42,
     )
 
-    model = MultiOutputRegressor(base_model)
+    model = MultiOutputRegressor(base_model, n_jobs=-1)
     model.fit(X_train, y_train)
 
     pred = model.predict(X_test)

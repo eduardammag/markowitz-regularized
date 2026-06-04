@@ -27,16 +27,17 @@ def predict(returns):
 
     base_model = XGBRegressor(
         objective="reg:squarederror",
-        n_estimators=150,
-        learning_rate=0.05,
-        max_depth=3,
+        n_estimators=50,
+        learning_rate=0.08,
+        max_depth=2,
         subsample=0.8,
         colsample_bytree=0.8,
         random_state=42,
         n_jobs=1,
+        verbosity=0,
     )
 
-    model = MultiOutputRegressor(base_model)
+    model = MultiOutputRegressor(base_model, n_jobs=-1)
     model.fit(X_train, y_train)
 
     pred = model.predict(X_test)
