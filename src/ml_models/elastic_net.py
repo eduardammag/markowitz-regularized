@@ -10,12 +10,12 @@ from sklearn.linear_model import ElasticNet
 from src.ml_models.feature_engineering import make_scaled_supervised_dataset
 
 
-def predict(returns):
+def predict(returns, horizon=1):
     """
-    Treina Elastic Net em dados historicos e retorna a previsao do proximo periodo.
+    Treina Elastic Net e preve a media diaria dos retornos no horizonte informado.
     """
 
-    X_train, y_train, X_test = make_scaled_supervised_dataset(returns)
+    X_train, y_train, X_test = make_scaled_supervised_dataset(returns, horizon)
 
     model = ElasticNet(alpha=0.001, l1_ratio=0.5, max_iter=10000)
     model.fit(X_train, y_train)

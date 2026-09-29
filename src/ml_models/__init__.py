@@ -28,9 +28,9 @@ MODEL_REGISTRY = {
 }
 
 
-def predict_returns(returns, model_type="lasso"):
+def predict_returns(returns, model_type="lasso", horizon=1):
     """
-    Preve o vetor de retornos esperados para o proximo periodo.
+    Preve o retorno diario medio por ativo no horizonte futuro especificado.
 
     Parameters
     ----------
@@ -38,6 +38,8 @@ def predict_returns(returns, model_type="lasso"):
         Historico de retornos dos ativos dentro da janela de treino.
     model_type : str
         Nome do modelo escolhido em config.py.
+    horizon : int
+        Numero de retornos futuros cuja media diaria sera prevista.
 
     Returns
     -------
@@ -49,4 +51,4 @@ def predict_returns(returns, model_type="lasso"):
         available = ", ".join(sorted(MODEL_REGISTRY.keys()))
         raise ValueError(f"Modelo invalido: {model_type}. Disponiveis: {available}")
 
-    return MODEL_REGISTRY[model_type](returns)
+    return MODEL_REGISTRY[model_type](returns, horizon=horizon)

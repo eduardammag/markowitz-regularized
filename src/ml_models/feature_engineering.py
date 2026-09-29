@@ -1,9 +1,9 @@
 """
 Funcoes comuns de engenharia de features para os modelos supervisionados.
 
-Os modelos deste projeto recebem retornos historicos e tentam prever o retorno
-do proximo periodo. Para isso, transformamos a serie temporal em uma tabela
-supervisionada com lags, media movel e volatilidade.
+Os modelos deste projeto recebem retornos historicos e tentam prever a media
+diaria dos retornos no horizonte futuro de avaliacao. Para isso, transformamos
+a serie temporal em uma tabela supervisionada com lags, media movel e volatilidade.
 """
 
 import pandas as pd
@@ -44,42 +44,39 @@ def build_features(returns):
     return X
 
 
-def make_supervised_dataset(returns):
+def make_supervised_dataset(returns, horizon=1):
     """
     Monta X_train, y_train e X_test respeitando ordem temporal.
 
-    O ultimo ponto disponivel vira X_test, pois queremos prever o proximo vetor
-    de retornos esperado a partir da janela de treino do backtest.
+    Cada linha de features no instante t prevê a média dos retornos entre
+    t+1 e t+horizon. A última linha disponível vira X_test.
     """
+    if horizon < 1:
+        raise ValueError("horizon deve ser pelo menos 1")
 
-    # Shift evita usar informacao do mesmo dia para prever o proprio dia.
-    X = build_features(returns).shift(1)
-    y = returns.copy()
+    features = build_features(returns)
+    target = returns.shift(-1).rolling(horizon).mean().shift(-(horizon - 1))
+    target.columns = [f"target_{column}" for column in returns.columns]
 
-    # Remove linhas incompletas criadas por lags e janelas moveis.
-    data = pd.concat([X, y], axis=1).dropna()
+    data = pd.concat([features, target], axis=1).dropna()
+    target_columns = list(target.columns)
 
-    X = data[X.columns]
-    y = data[y.columns]
-
-    # Treina em todo o historico menos a ultima observacao.
-    X_train = X.iloc[:-1]
-    y_train = y.iloc[:-1]
-
-    # A ultima linha e usada como ponto fora da amostra.
-    X_test = X.iloc[-1:]
+    X_train = data[features.columns]
+    y_train = data[target_columns].copy()
+    y_train.columns = returns.columns
+    X_test = features.iloc[[-1]]
 
     return X_train, y_train, X_test
 
 
-def make_scaled_supervised_dataset(returns):
+def make_scaled_supervised_dataset(returns, horizon=1):
     """
     Cria dataset supervisionado e aplica padronizacao nas features.
 
     A escala e ajustada apenas no treino para evitar vazamento de informacao.
     """
 
-    X_train, y_train, X_test = make_supervised_dataset(returns)
+    X_train, y_train, X_test = make_supervised_dataset(returns, horizon)
 
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)

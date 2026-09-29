@@ -6,7 +6,7 @@ o melhor chute para o retorno esperado futuro e a media observada no passado.
 """
 
 
-def predict(returns):
+def predict(returns, horizon=1):
     """
     Retorna a media historica de cada ativo na janela de treino.
     """

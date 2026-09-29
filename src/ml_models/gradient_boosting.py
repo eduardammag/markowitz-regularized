@@ -12,12 +12,12 @@ from sklearn.multioutput import MultiOutputRegressor
 from src.ml_models.feature_engineering import make_supervised_dataset
 
 
-def predict(returns):
+def predict(returns, horizon=1):
     """
-    Treina Gradient Boosting para cada ativo e preve o proximo periodo.
+    Treina Gradient Boosting para prever a media diaria no horizonte informado.
     """
 
-    X_train, y_train, X_test = make_supervised_dataset(returns)
+    X_train, y_train, X_test = make_supervised_dataset(returns, horizon)
 
     base_model = GradientBoostingRegressor(
         n_estimators=50,

@@ -10,16 +10,16 @@ from sklearn.ensemble import RandomForestRegressor
 from src.ml_models.feature_engineering import make_supervised_dataset
 
 
-def predict(returns):
+def predict(returns, horizon=1):
     """
-    Treina Random Forest multioutput e retorna a previsao do proximo periodo.
+    Treina Random Forest multioutput para prever a media diaria no horizonte informado.
     """
 
     # Arvores nao exigem padronizacao, entao usamos as features originais.
-    X_train, y_train, X_test = make_supervised_dataset(returns)
+    X_train, y_train, X_test = make_supervised_dataset(returns, horizon)
 
     model = RandomForestRegressor(
-        n_estimators=200,
+        n_estimators=50,
         max_depth=5,
         min_samples_leaf=5,
         random_state=42,

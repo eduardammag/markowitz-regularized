@@ -19,23 +19,27 @@ warnings.filterwarnings("ignore")
 # EXPERIMENTO INDIVIDUAL
 def run_single_experiment(args):
 
-    if len(args) == 5:
-        m, gamma, lambda_reg, returns, prediction_cache = args
+    if len(args) == 4:
+        m, gamma, returns, prediction_cache = args
     else:
-        m, gamma, lambda_reg, returns = args
+        m, gamma, returns = args
         prediction_cache = None
 
-    name = f"{m}_g{gamma}_l{lambda_reg}"
+    name = f"{m}_g{gamma}"
     print(f"[INFO] Rodando experimento: {name}")
 
     def model_wrapper(data):
-        return predict_returns(data, model_type=m)
+        return predict_returns(
+            data,
+            model_type=m,
+            horizon=project_config.TEST_WINDOW,
+        )
 
     portfolio_returns, preds, reals, weights_history, dates = run_backtest(
         returns,
         model_wrapper,
         estimate_covariance,
-        lambda mu, cov: optimize_portfolio(mu, cov, lambda_reg, gamma),
+        lambda mu, cov: optimize_portfolio(mu, cov, gamma),
         config=project_config,
         prediction_cache=prediction_cache,
         prediction_cache_key=m,

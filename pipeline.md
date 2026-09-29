@@ -54,7 +54,7 @@ Aqui está o coração da sua dúvida 👇
 Você constrói um modelo que aprende:
 
 [
-X_t \rightarrow \hat{\mu}_{t+1}
+X_t \rightarrow \hat{\mu}_{t+1:t+21}
 ]
 
 ---
@@ -77,18 +77,18 @@ X_t = [R_{t-1}, R_{t-2}, \text{volatilidade}, \text{média}]
 
 ### 🎯 O que o modelo prevê?
 
-[
-\hat{\mu}_{t+1}
+[ 
+\hat{\mu}_{t+1:t+21}
 ]
 
-👉 previsão do retorno futuro de cada ativo
+👉 previsão do retorno diário médio de cada ativo nos próximos 21 pregões
 
 Exemplo de saída:
 
 ```
-PETR4 → 0.012
-VALE3 → 0.008
-ITUB4 → 0.010
+PETR4 → 0.0012
+VALE3 → 0.0008
+ITUB4 → 0.0010
 ```
 
 ✔️ Isso é:
@@ -134,7 +134,7 @@ Agora vem a decisão:
 Você resolve:
 
 [
-\max_w \quad w^T \hat{\mu} - \lambda w^T \Sigma w
+\max_w \quad w^T \hat{\mu} - \gamma w^T \Sigma w
 ]
 
 ou
@@ -180,7 +180,7 @@ Para cada mês:
 3. prevê ( \hat{\mu} )
 4. calcula ( \Sigma )
 5. encontra ( w_t )
-6. aplica no mês seguinte
+6. aplica nos próximos 21 pregões, o mesmo horizonte previsto
 
 ---
 

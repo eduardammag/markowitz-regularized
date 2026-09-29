@@ -71,7 +71,3 @@ models = [
 # Para analise de robustez, pode-se testar: [1, 5, 10].
 gammas = [5]
 
-# Lambda controla a regularizacao dos pesos da carteira.
-# O experimento principal usa lambda=0.1 como configuracao central.
-# Para analise de robustez, pode-se testar: [0.01, 0.1, 1].
-lambdas = [0.1]

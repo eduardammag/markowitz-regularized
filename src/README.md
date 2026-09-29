@@ -37,7 +37,7 @@ Contem os modelos que preveem retornos esperados.
 Transforma previsoes em pesos de carteira.
 
 - `covariance.py`: estima matriz de covariancia via Ledoit-Wolf.
-- `optimizer.py`: resolve Markowitz regularizado com restricoes.
+- `optimizer.py`: resolve Markowitz classico com restricoes long-only e peso maximo.
 
 ## 4. backtesting
 
@@ -49,12 +49,12 @@ Simula a estrategia no tempo.
 
 Conecta modelo, covariancia, otimizacao e backtest.
 
-- `single_experiment.py`: executa uma combinacao de modelo, gamma e lambda.
+- `single_experiment.py`: executa uma combinacao de modelo e gamma.
 
-Com a configuracao atual, o projeto executa 63 estrategias:
+Com a configuracao atual, o projeto executa 7 estrategias:
 
 ```text
-7 modelos x 3 gammas x 3 lambdas
+7 modelos x 1 gamma
 ```
 
 ## 6. evaluation

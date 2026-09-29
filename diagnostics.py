@@ -60,7 +60,7 @@ def max_drawdown(period_returns):
     return drawdown.min()
 
 
-def run_diagnostic_backtest(returns, model_name, gamma, lambda_reg):
+def run_diagnostic_backtest(returns, model_name, gamma):
     gross_returns = []
     turnovers = []
     weights_history = []
@@ -72,9 +72,13 @@ def run_diagnostic_backtest(returns, model_name, gamma, lambda_reg):
         train = returns.iloc[i - config.TRAIN_WINDOW:i]
         test = returns.iloc[i:i + config.TEST_WINDOW]
 
-        mu_pred = predict_returns(train, model_type=model_name)
+        mu_pred = predict_returns(
+            train,
+            model_type=model_name,
+            horizon=config.TEST_WINDOW,
+        )
         cov = estimate_covariance(train)
-        weights = optimize_portfolio(mu_pred, cov, lambda_reg=lambda_reg, gamma=gamma)
+        weights = optimize_portfolio(mu_pred, cov, gamma=gamma)
 
         daily_portfolio_returns = test.values @ weights
         gross_return = np.prod(1 + daily_portfolio_returns) - 1
@@ -167,7 +171,6 @@ def main():
 
     periods_per_year = 252 / config.TEST_WINDOW
     gamma = config.gammas[0]
-    lambda_reg = config.lambdas[0]
 
     rows = []
     print("\n===== DIAGNOSTICOS DO BACKTEST =====\n")
@@ -176,11 +179,11 @@ def main():
     print(f"TEST_WINDOW: {config.TEST_WINDOW} dias")
     print(f"Frequencia inferida: {periods_per_year:.2f} periodos por ano")
     print(f"Gamma usado: {gamma}")
-    print(f"Lambda usado: {lambda_reg}\n")
+    print("Regularização de pesos: desativada\n")
 
     for model_name in config.models:
         print(f"[INFO] Diagnosticando {model_name}...")
-        result = run_diagnostic_backtest(returns, model_name, gamma, lambda_reg)
+        result = run_diagnostic_backtest(returns, model_name, gamma)
 
         gross = result["gross_returns"]
         turnovers = result["turnovers"]

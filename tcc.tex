@@ -76,20 +76,18 @@
     \centering
 
     \vspace*{0.5cm}
-
     % Espaço reservado para a logo da faculdade.
-    % Substitua o arquivo abaixo pelo caminho correto da logo.
     % Exemplo: \includegraphics[width=0.28\textwidth]{figures/logo_fgv.png}
 \begin{minipage}[c][3cm][c]{0.45\textwidth}
     \centering
-    \includegraphics[width=0.8\linewidth]{output/tcc/logo-fgv.png}
+    \IfFileExists{output/tcc/logo-fgv.png}{%
+        \includegraphics[width=0.8\linewidth]{output/tcc/logo-fgv.png}%
+    }{}
 \end{minipage}
     \vspace{1.5cm}
 
     {\large \instituicao \par}
     {\large \curso \par}
-
-    \vfill
 
     {\Large \textbf{\titulo} \par}
 
@@ -120,7 +118,7 @@
 \chapter*{Resumo}
 \addcontentsline{toc}{chapter}{Resumo}
 
-Este trabalho investiga se modelos de aprendizado de máquina podem melhorar a construção de portfólios quando combinados com a otimização média-variância de Markowitz. A principal dificuldade prática da abordagem clássica está na estimação dos retornos esperados, uma vez que pequenas variações nessas estimativas podem produzir grandes alterações nos pesos ótimos. Para estudar esse problema, é proposto um pipeline quantitativo que utiliza modelos supervisionados para prever retornos esperados de ações brasileiras e, em seguida, aplica uma otimização de Markowitz regularizada para determinar os pesos da carteira.
+Este trabalho investiga se modelos de aprendizado de máquina podem melhorar a construção de portfólios quando combinados com a otimização média-variância de Markowitz. A principal dificuldade prática da abordagem clássica está na estimação dos retornos esperados, uma vez que pequenas variações nessas estimativas podem produzir grandes alterações nos pesos ótimos. Para estudar esse problema, é proposto um pipeline quantitativo que utiliza modelos supervisionados para prever retornos esperados de ações brasileiras e, em seguida, aplica a otimização clássica de Markowitz com restrições para determinar os pesos da carteira.
 
 O universo empírico é composto por vinte empresas brasileiras grandes, líquidas e consolidadas, com histórico disponível no Yahoo Finance ao longo do período analisado. São avaliados modelos lineares regularizados, como Lasso, Ridge e Elastic Net, modelos não lineares, como Random Forest, Gradient Boosting e XGBoost, além de uma média histórica como baseline preditivo. A matriz de covariância é estimada pelo método de Ledoit-Wolf, e as carteiras são avaliadas por meio de backtesting com janela móvel, rebalanceamento aproximadamente mensal, restrição de venda a descoberto e limite máximo de peso por ativo.
 
@@ -153,7 +151,7 @@ Diante disso, este trabalho investiga uma pergunta aplicada:
 \parbox{0.85\textwidth}{
 \centering
 \textbf{\large
-Modelos de aprendizado de máquina melhoram a estimação de retornos esperados e, quando combinados com Markowitz regularizado, geram carteiras superiores às estratégias tradicionais?
+Modelos de aprendizado de máquina melhoram a estimação de retornos esperados e, quando combinados com Markowitz, geram carteiras superiores às estratégias tradicionais?
 }
 }
 }
@@ -161,7 +159,7 @@ Modelos de aprendizado de máquina melhoram a estimação de retornos esperados 
 
 \section{Objetivos}
 
-O objetivo geral deste trabalho é avaliar o desempenho de carteiras construídas a partir de previsões de retornos geradas por modelos de aprendizado de máquina e otimizadas por uma formulação regularizada de Markowitz.
+O objetivo geral deste trabalho é avaliar o desempenho de carteiras construídas a partir de previsões de retornos geradas por modelos de aprendizado de máquina e otimizadas pela formulação clássica de Markowitz com restrições práticas.
 
 Os objetivos específicos são:
 
@@ -177,11 +175,11 @@ Os objetivos específicos são:
 
 \section{Contribuição}
 
-A principal contribuição deste trabalho é desenvolver e avaliar, de forma integrada, um pipeline empírico de alocação de portfólios que combina previsão supervisionada de retornos, estimação robusta de risco, otimização média-variância regularizada e backtesting fora da amostra. Diferentemente de uma análise restrita à comparação de modelos preditivos, o trabalho investiga se a melhora nas previsões de retorno é efetivamente convertida em melhor desempenho financeiro após a etapa de otimização. Essa distinção é central, pois um modelo com menor erro estatístico não necessariamente gera a carteira com maior retorno ajustado ao risco.
+A principal contribuição deste trabalho é desenvolver e avaliar, de forma integrada, um pipeline empírico de alocação de portfólios que combina previsão supervisionada de retornos, estimação robusta de risco, otimização média-variância com restrições e backtesting fora da amostra. Diferentemente de uma análise restrita à comparação de modelos preditivos, o trabalho investiga se a melhora nas previsões de retorno é efetivamente convertida em melhor desempenho financeiro após a etapa de otimização. Essa distinção é central, pois um modelo com menor erro estatístico não necessariamente gera a carteira com maior retorno ajustado ao risco.
 
 Do ponto de vista metodológico, o trabalho contribui ao estruturar uma abordagem reprodutível para testar diferentes estimadores de retorno esperado no contexto do mercado acionário brasileiro. São comparados modelos lineares regularizados, modelos baseados em árvores e uma média histórica, todos inseridos na mesma estrutura de rebalanceamento, restrições e avaliação. Com isso, a comparação entre estratégias passa a refletir não apenas a capacidade preditiva isolada dos modelos, mas também seu impacto prático sobre a composição e o desempenho das carteiras.
 
-Outra contribuição relevante é a incorporação de mecanismos de controle de instabilidade, como o uso do estimador de covariância de Ledoit-Wolf, a regularização dos pesos e restrições práticas de alocação, incluindo a proibição de venda a descoberto e o limite máximo por ativo. Esses elementos aproximam o experimento de uma aplicação realista, na qual carteiras excessivamente concentradas ou sensíveis a pequenas variações nos parâmetros estimados tendem a ser pouco desejáveis.
+Outra contribuição relevante é a incorporação de mecanismos de controle de instabilidade, como o uso do estimador de covariância de Ledoit-Wolf e restrições práticas de alocação, incluindo a proibição de venda a descoberto e o limite máximo por ativo. Esses elementos aproximam o experimento de uma aplicação realista, na qual carteiras excessivamente concentradas ou sensíveis a pequenas variações nos parâmetros estimados tendem a ser pouco desejáveis.
 
 O trabalho também contribui ao avaliar conjuntamente métricas preditivas e financeiras. Ao comparar erro médio absoluto, erro quadrático médio e acurácia direcional com retorno acumulado, índice de Sharpe, drawdown máximo e turnover, a análise permite discutir a relação entre qualidade estatística das previsões e utilidade econômica das carteiras. Essa avaliação é especialmente importante em finanças, pois pequenos sinais preditivos podem ser amplificados pela otimização e produzir resultados instáveis.
 
@@ -225,15 +223,13 @@ e a variância da carteira é:
 \sigma_p^2 = \mathbf{w}^{T}\Sigma\mathbf{w}.
 \end{equation}
 
-Na formulação clássica, busca-se minimizar a variância para um retorno alvo ou maximizar uma função de utilidade que penaliza o risco. A formulação usada neste trabalho é uma versão regularizada:
+Na formulação clássica, busca-se minimizar a variância para um retorno alvo ou maximizar uma função de utilidade que penaliza o risco. Neste trabalho, utiliza-se a seguinte formulação média-variância:
 
 \begin{equation}
 \max_{\mathbf{w}}
 \quad
 \mathbf{w}^{T}\hat{\boldsymbol{\mu}}
-- \gamma \mathbf{w}^{T}\hat{\Sigma}\mathbf{w}
-- \lambda \|\mathbf{w}\|_1
-- \lambda \|\mathbf{w}\|_2,
+- \gamma \mathbf{w}^{T}\hat{\Sigma}\mathbf{w},
 \end{equation}
 
 sujeita a:
@@ -244,28 +240,15 @@ w_i &\geq 0, \quad i=1,\ldots,N, \\
 w_i &\leq 0.15, \quad i=1,\ldots,N.
 \end{align}
 
-O termo $\gamma$ controla a aversão a risco. Quanto maior $\gamma$, maior a penalização sobre a variância da carteira. O termo $\lambda$ controla a regularização dos pesos. A penalização $\ell_2$ reduz soluções muito extremas. Já o termo $\ell_1$ é incluído na formulação inicial, mas, dadas as restrições de não negatividade e orçamento, torna-se constante no conjunto viável, como mostrado a seguir. A restrição $w_i \leq 0.15$ impede que a carteira concentre mais de 15\% do capital em um único ativo.
+O termo $\gamma$ controla a aversão a risco: quanto maior seu valor, maior a penalização sobre a variância da carteira. As restrições de orçamento, não negatividade e limite máximo por ativo definem o conjunto de carteiras admissíveis. A restrição $w_i \leq 0.15$ impede que a carteira concentre mais de 15\% do capital em um único ativo.
 
-Como as restrições impõem $w_i \geq 0$ e $\sum_{i=1}^{N}w_i=1$, tem-se:
-
-\begin{equation}
-\|\mathbf{w}\|_1
-=
-\sum_{i=1}^{N}|w_i|
-=
-\sum_{i=1}^{N}w_i
-=
-1.
-\end{equation}
-
-Portanto, dentro do conjunto viável, o termo $\lambda\|\mathbf{w}\|_1$ é constante e não altera o vetor de pesos ótimo. Assim, a otimização pode ser escrita de forma equivalente como:
+O vetor de pesos ótimo $\mathbf{w}^{*}$ é definido por:
 
 \begin{equation}
 \max_{\mathbf{w}}
 \quad
 \mathbf{w}^{T}\hat{\boldsymbol{\mu}}
 - \gamma \mathbf{w}^{T}\hat{\Sigma}\mathbf{w}
-- \lambda \|\mathbf{w}\|_2,
 \end{equation}
 
 sujeita às mesmas restrições de orçamento, não negatividade e limite máximo por ativo. A solução ótima $\mathbf{w}^{*}$ é, portanto:
@@ -277,7 +260,6 @@ sujeita às mesmas restrições de orçamento, não negatividade e limite máxim
 \left\{
 \mathbf{w}^{T}\hat{\boldsymbol{\mu}}
 - \gamma \mathbf{w}^{T}\hat{\Sigma}\mathbf{w}
-- \lambda \|\mathbf{w}\|_2
 \right\},
 \end{equation}
 
@@ -299,7 +281,6 @@ As condições de otimalidade de Karush-Kuhn-Tucker caracterizam essa solução.
 \begin{align}
 \hat{\boldsymbol{\mu}}
 -2\gamma\hat{\Sigma}\mathbf{w}^{*}
--\lambda\frac{\mathbf{w}^{*}}{\|\mathbf{w}^{*}\|_2}
 -\eta\mathbf{1}
 +\boldsymbol{\alpha}
 -\boldsymbol{\beta}
@@ -310,7 +291,7 @@ As condições de otimalidade de Karush-Kuhn-Tucker caracterizam essa solução.
 \beta_i(0.15-w_i^{*}) &= 0,\quad i=1,\ldots,N.
 \end{align}
 
-Essas equações mostram que, no ótimo, o ganho marginal de aumentar o peso de um ativo é equilibrado pela penalização de risco, pela regularização e pelas restrições ativas. Quando um ativo recebe peso zero, a condição de complementaridade permite que $\alpha_i>0$; quando um ativo atinge o limite de 15\%, permite que $\beta_i>0$. Como o problema contém restrições de caixa e de limite superior, a solução geral não é dada por uma única expressão fechada simples. Na implementação, ela é obtida numericamente por programação convexa, retornando o vetor $\mathbf{w}^{*}$ que satisfaz essas condições.
+Essas equações mostram que, no ótimo, o ganho marginal de aumentar o peso de um ativo é equilibrado pela penalização de risco e pelas restrições ativas. Quando um ativo recebe peso zero, a condição de complementaridade permite que $\alpha_i>0$; quando um ativo atinge o limite de 15\%, permite que $\beta_i>0$. Como o problema contém restrições de caixa e de limite superior, a solução geral não é dada por uma única expressão fechada simples. Na implementação, ela é obtida numericamente por programação convexa, retornando o vetor $\mathbf{w}^{*}$ que satisfaz essas condições.
 
 \section{Estimação da Matriz de Covariância}
 
@@ -385,7 +366,7 @@ Para um ativo em um instante $t$, escreve-se:
 y_t = f(\mathbf{x}_t) + \varepsilon_t,
 \end{equation}
 
-em que $y_t$ é o retorno observado no período seguinte, $\mathbf{x}_t$ é o vetor de atributos disponíveis no instante $t$, $f$ é a relação que o modelo tenta aprender e $\varepsilon_t$ é o erro ou ruído não explicado pelo modelo. No contexto deste trabalho, $y_t$ representa o retorno futuro que será usado como estimativa de retorno esperado na etapa de otimização.
+em que $\mathbf{x}_t$ é o vetor de atributos disponíveis no instante $t$, $f$ é a relação que o modelo tenta aprender e $\varepsilon_t$ é o erro ou ruído não explicado pelo modelo. Neste trabalho, $y_t$ é a média diária dos retornos do ativo entre $t+1$ e $t+H$, onde $H=21$ pregões. Assim, o alvo de treino e o valor observado usado nas métricas correspondem ao mesmo horizonte de avaliação.
 
 O vetor de atributos pode ser escrito como:
 
@@ -436,15 +417,15 @@ As variáveis explicativas utilizadas são:
     \item volatilidade móvel de 20 dias.
 \end{itemize}
 
-Para cada ativo, o alvo é o retorno observado no período seguinte. Depois de treinado, o modelo recebe os atributos mais recentes e gera a previsão:
+Para cada ativo, o alvo é a média diária dos retornos nos próximos 21 pregões. Depois de treinado, o modelo recebe os atributos mais recentes, calculados até o último dia da janela de treino, e gera a previsão:
 
 \begin{equation}
-\hat{\boldsymbol{\mu}}_{t+1}
+\hat{\boldsymbol{\mu}}_{t+1:t+H}
 =
 f(\mathbf{X}_t),
 \end{equation}
 
-em que $\hat{\boldsymbol{\mu}}_{t+1}$ é o vetor de retornos esperados previstos para os ativos no próximo período. Esse vetor é usado posteriormente como entrada da otimização de Markowitz.
+em que cada componente de $\hat{\boldsymbol{\mu}}_{t+1:t+H}$ estima o retorno diário médio do ativo no horizonte futuro de 21 pregões. Esse vetor de médias diárias é usado como entrada da otimização de Markowitz, junto à covariância diária estimada na janela de treino.
 
 \section{Média Histórica}
 
@@ -703,7 +684,6 @@ Rebalanceamento & Aproximadamente mensal \\
 Venda a descoberto & Não permitida \\
 Peso máximo por ativo & 15\% \\
 $\gamma$ & 5 \\
-$\lambda$ & 0.1 \\
 Custo de transação & 0.1\% por unidade de turnover \\
 Covariância & Ledoit-Wolf \\
 \bottomrule
@@ -711,29 +691,87 @@ Covariância & Ledoit-Wolf \\
 \caption{Configuração principal do experimento}
 \end{table}
 
+\noindent\textit{Nota sobre os dados efetivamente carregados:} a configuração solicita 20 tickers, mas a execução usada nesta documentação carregou 19 séries e 3.975 observações. A série de WEGE3.SA não estava disponível no conjunto retornado pelo provedor e, por isso, foi removida pelo carregador. Assim, os resultados dessa execução correspondem a 19 ativos; uma carteira igualmente ponderada nesse universo atribuiria aproximadamente $1/19=5.26\%$ a cada ativo, antes de considerar os pesos otimizados.
+
 \section{Justificativa dos Hiperparâmetros}
 
 O parâmetro $\gamma=5$ representa uma aversão a risco intermediária \cite{liu2010,bodnar2015}. Valores muito baixos tenderiam a priorizar excessivamente as previsões de retorno, que são ruidosas em finanças. Valores muito altos poderiam produzir carteiras excessivamente conservadoras. Portanto, $\gamma=5$ é escolhido como valor central para o experimento principal.
 
-O parâmetro $\lambda=0.1$ controla a regularização dos pesos. Sua função é reduzir instabilidade e evitar alocações excessivamente sensíveis às previsões. A escolha de um valor moderado é coerente com o objetivo de construir carteiras mais robustas.
-
 O limite máximo de 15\% por ativo é adotado porque o universo contém 20 ações. Sem esse limite, a otimização poderia concentrar capital em poucos ativos, especialmente quando as previsões de retorno fossem muito otimistas para uma empresa específica. Com 20 ativos, um limite de 15\% ainda permite convicção em determinados nomes, mas impede concentração extrema.
+
+\section{Pipeline Técnico em uma Rodada}
+
+Esta seção acompanha uma única decisão de investimento do início ao fim. O objetivo é deixar claro o que o programa conhece no momento da decisão, o que estima e o que só será observado depois. Essa separação temporal é fundamental: os dados usados para escolher a carteira devem estar disponíveis antes do período cujo desempenho será medido.
+
+\subsection{Dos preços aos retornos}
+
+O programa começa com uma tabela de preços ajustados: cada linha representa uma data de pregão e cada coluna representa uma ação. Para cada ativo, o preço é convertido em retorno simples diário:
+
+\begin{equation}
+r_{i,t}=\frac{P_{i,t}}{P_{i,t-1}}-1,
+\end{equation}
+
+em que $P_{i,t}$ é o preço ajustado do ativo $i$ no dia $t$. Por exemplo, se o preço passa de R\$ 100 para R\$ 102, o retorno é $(102/100)-1=0.02$, ou 2\%. O código calcula essa transformação com a variação percentual entre dias consecutivos. Retornos, e não preços, são usados tanto para treinar os modelos quanto para calcular risco e desempenho financeiro.
+
+\subsection{O que entra no modelo e o que ele prevê}
+
+Em cada data $t$, as variáveis de entrada são calculadas apenas com retornos disponíveis até $t$. Para cada ativo, são incluídos retornos defasados em 1, 2, 3 e 5 pregões, a média móvel dos últimos 20 pregões e o desvio-padrão móvel dos últimos 20 pregões. As defasagens resumem movimentos recentes; a média móvel descreve o retorno médio recente; e o desvio-padrão móvel resume a variação recente dos retornos. Como essas estatísticas usam dados até a data corrente, elas podem ser conhecidas no instante em que a carteira é formada.
+
+O alvo supervisionado não é o preço futuro nem o retorno acumulado dos 21 dias. É a média diária dos próximos $H=21$ retornos do ativo:
+
+\begin{equation}
+y_{i,t}^{(H)}
+=
+\frac{1}{H}\sum_{k=1}^{H}r_{i,t+k},
+\qquad H=21.
+\end{equation}
+
+Assim, um exemplo de treino é composto pelas informações $\mathbf{x}_{i,t}$ disponíveis até $t$ e por $y_{i,t}^{(21)}$, calculado com os 21 retornos que ocorreram depois de $t$. O programa só inclui no treino exemplos para os quais todo esse bloco futuro já está dentro da janela histórica de treino; as linhas finais sem alvo futuro completo são descartadas. A previsão na ponta da janela, por sua vez, usa as variáveis calculadas até o último pregão conhecido e estima a média diária do bloco de teste seguinte.
+
+Os modelos Lasso, Ridge, Elastic Net, Random Forest, Gradient Boosting e XGBoost aprendem uma relação entre os atributos e esse alvo futuro. Os modelos lineares regularizados padronizam as variáveis explicativas usando parâmetros ajustados no treino. Os modelos baseados em árvores recebem as features sem essa padronização. A média histórica é um baseline: para cada ativo, usa a média dos retornos diários observados na janela de treino, sem ajustar uma regressão sobre as features. Em cada novo rebalanceamento, os modelos supervisionados são treinados novamente com a janela disponível naquele instante.
+
+\subsection{Exemplo de calendário sem uso do futuro}
+
+Considere uma janela de treino que termina no pregão 252. O modelo recebe dados dos pregões 1 a 252. Entre os exemplos de treino, o último instante que pode ter um alvo completo é o pregão 231, pois seu alvo usa os pregões 232 a 252. Depois do treino, as features calculadas até o pregão 252 são passadas ao modelo para prever a média diária dos pregões 253 a 273. Os retornos de 253 a 273 não participam da previsão; eles só são usados posteriormente para avaliar a carteira. Na próxima rodada, o treino móvel avança 21 pregões, usa os pregões 22 a 273 e testa nos pregões 274 a 294.
+
+\subsection{Da previsão aos pesos}
+
+Para cada rodada, o modelo fornece um vetor $\hat{\boldsymbol{\mu}}_t$ com uma estimativa de retorno diário médio para cada ativo. Separadamente, a matriz $\hat{\Sigma}_t$ é estimada pelo método Ledoit-Wolf usando os retornos diários da janela de treino. Essa matriz contém as variâncias individuais e as covariâncias entre pares de ações; portanto, o risco de uma carteira depende tanto da volatilidade de cada ativo quanto de como seus retornos se movem em conjunto.
+
+O otimizador escolhe os pesos $\mathbf{w}_t$ que maximizam:
+
+\begin{equation}
+\hat{\boldsymbol{\mu}}_t^{T}\mathbf{w}_t
+-\gamma\mathbf{w}_t^{T}\hat{\Sigma}_t\mathbf{w}_t,
+\end{equation}
+
+sujeito a $\sum_i w_{i,t}=1$, $w_{i,t}\geq 0$ e $w_{i,t}\leq 0.15$. O primeiro termo recompensa retorno esperado; o segundo penaliza variância; $\gamma=5$ define o peso atribuído ao risco. A soma igual a um significa que todo o capital é alocado, a não negatividade proíbe posições vendidas e o teto limita a exposição a uma única ação. Os pesos são uma decisão calculada com estimativas, não uma garantia de retorno.
+
+É importante comparar unidades coerentes: aqui, $\hat{\boldsymbol{\mu}}_t$ representa retorno diário médio, e $\hat{\Sigma}_t$ é uma covariância de retornos diários. O horizonte de 21 dias define o alvo e o período em que os pesos são mantidos; o retorno previsto continua expresso por dia. O retorno efetivo da carteira ao longo do bloco é calculado separadamente por composição diária.
 
 \section{Algoritmo do Backtest}
 
-O processo de backtest segue uma estrutura de janela móvel. Em cada etapa:
+O backtest é uma simulação histórica, feita como se a estratégia estivesse sendo executada ao longo do tempo sem conhecer antecipadamente os dados futuros. A janela é móvel, isto é, após cada avaliação ela avança 21 pregões. Em cada etapa:
 
 \begin{enumerate}
     \item seleciona-se uma janela de treino com 252 pregões;
     \item constroem-se as variáveis explicativas;
     \item treina-se o modelo preditivo;
-    \item prevê-se o vetor de retornos esperados $\hat{\boldsymbol{\mu}}$;
+    \item prevê-se a média diária de retorno de cada ativo para os 21 pregões seguintes;
     \item estima-se a matriz de covariância $\hat{\Sigma}$ com Ledoit-Wolf;
-    \item resolve-se a otimização de Markowitz regularizada;
-    \item aplica-se a carteira nos 21 pregões seguintes;
+    \item resolve-se a otimização clássica de Markowitz com restrições;
+    \item aplica-se a carteira nos mesmos 21 pregões previstos;
     \item registra-se o retorno composto da carteira;
     \item desloca-se a janela para o próximo período.
 \end{enumerate}
+
+Em termos práticos, o programa não treina um único modelo em toda a amostra e depois mede seu ajuste nos mesmos dados. Ele repete o ciclo treino--previsão--carteira--teste em cada data de rebalanceamento. Isso produz uma sequência de avaliações fora da amostra: em cada uma, a carteira é formada somente com o histórico anterior à janela de teste. O procedimento completo é implementado em \texttt{src/backtesting/engine.py}; os parâmetros das janelas são definidos em \texttt{config.py}.
+
+O índice de início da janela de teste avança em passos de 21 observações. Por isso, os blocos de teste consecutivos não se sobrepõem entre si. A janela de treino tem 252 observações diárias e é deslocada junto com o calendário, em vez de crescer indefinidamente. Esse desenho faz com que a estimativa use aproximadamente o último ano de pregões, permitindo que períodos mais antigos deixem de influenciar diretamente as decisões mais recentes.
+
+\subsection{Retorno observado e custos}
+
+Durante os 21 pregões de teste, os pesos $\mathbf{w}_t$ permanecem fixos. Em cada dia $\tau$, o retorno diário da carteira é a soma dos retornos dos ativos ponderados por seus pesos, $\mathbf{r}_{\tau}^{T}\mathbf{w}_t$. O retorno do bloco é então composto multiplicando os fatores de crescimento diários, como mostrado na equação a seguir. Por exemplo, retornos diários da carteira de 1\% e depois -1\% resultam em $(1.01)(0.99)-1=-0.0001$, isto é, uma pequena perda de 0.01\%, e não exatamente zero.
 
 O retorno da carteira no período de teste é:
 
@@ -839,6 +877,8 @@ c\cdot TO_t
 
 ou seja, 0.05\% de retorno. Dessa forma, o backtest avalia não apenas a capacidade da estratégia de gerar retorno, mas também se esse retorno é robusto a custos operacionais simples.
 
+Na implementação, esse custo é descontado uma vez do retorno composto de cada bloco de teste a partir do segundo rebalanceamento; na primeira alocação, não há custo de entrada. Essa é uma aproximação didática: não modela compras e vendas em cada pregão, spread, impostos ou impacto de mercado. Além disso, os benchmarks Equal Weight e Ibovespa são calculados sem esse desconto. Portanto, a comparação financeira deve ser interpretada considerando que o tratamento de custos não é idêntico para todas as estratégias.
+
 \section{Benchmarks}
 
 São utilizados dois benchmarks:
@@ -858,6 +898,8 @@ Para garantir comparabilidade, os retornos dos benchmarks são agregados nas mes
 \section{Visão Geral da Avaliação}
 
 A avaliação das estratégias é feita em duas dimensões complementares. A primeira é financeira e mede o desempenho das carteiras efetivamente formadas pelo otimizador de Markowitz. A segunda é preditiva e mede a qualidade das previsões de retorno produzidas pelos modelos de aprendizado de máquina. Essa separação é essencial porque o objetivo final do trabalho não é apenas prever retornos com baixo erro estatístico, mas transformar essas previsões em decisões de alocação capazes de gerar melhor relação risco-retorno.
+
+As métricas preditivas são calculadas comparando, em cada rebalanceamento e para cada ativo, a média diária prevista para os próximos 21 pregões com a média diária observada nesses mesmos pregões. MSE e MAE resumem o tamanho dos erros; acurácia direcional verifica se a previsão e a observação têm o mesmo sinal. As métricas financeiras usam, em vez disso, um retorno composto da carteira para cada bloco de teste. Assim, há uma observação financeira por rebalanceamento, enquanto as métricas preditivas agregam erros de vários ativos e rebalanceamentos. Um modelo com menor erro não precisa produzir a carteira de maior retorno, pois os pesos também dependem da covariância e das restrições.
 
 No contexto de portfólios, uma previsão ligeiramente melhor pode não resultar em uma carteira melhor caso o otimizador amplifique ruídos, concentre pesos em poucos ativos ou gere alto turnover. Da mesma forma, uma previsão com erro médio relativamente maior pode ainda produzir boa performance financeira se preservar corretamente a ordenação relativa dos ativos ou se evitar sinais extremos.
 
@@ -988,7 +1030,7 @@ MSE =
 
 em que $y_j$ representa o retorno observado e $\hat{y}_j$ representa o retorno previsto. O MSE penaliza erros grandes de forma mais intensa, pois os desvios são elevados ao quadrado. Em finanças, isso pode ser útil para identificar modelos que ocasionalmente produzem previsões muito distantes da realidade, algo perigoso em uma etapa posterior de otimização.
 
-Nessa equação, $n$ é o número total de previsões avaliadas e $j$ identifica cada previsão individual. Cada par $(y_j,\hat{y}_j)$ compara o retorno que de fato ocorreu com o retorno estimado pelo modelo. O erro de previsão da observação $j$ é:
+Nessa equação, $n$ é o número total de previsões avaliadas e $j$ identifica cada previsão individual. Neste experimento, cada par $(y_j,\hat{y}_j)$ compara, para um mesmo ativo e rebalanceamento, a média diária prevista para os próximos 21 pregões com a média diária efetivamente observada nesses mesmos pregões. O erro de previsão da observação $j$ é:
 
 \begin{equation}
 e_j
@@ -1278,9 +1320,9 @@ Variáveis como taxa Selic, inflação, câmbio, curva de juros, preços de comm
 
 \subsection{Hiperparâmetros Fixos no Experimento Principal}
 
-O experimento principal utiliza valores fixos para parâmetros como $\gamma$, $\lambda$, tamanho das janelas e configurações dos modelos preditivos. Essa decisão torna os resultados mais simples de interpretar e evita transformar o trabalho em uma busca excessiva de hiperparâmetros. No entanto, também significa que as conclusões podem depender da configuração escolhida.
+O experimento principal utiliza valores fixos para parâmetros como $\gamma$, tamanho das janelas e configurações dos modelos preditivos. Essa decisão torna os resultados mais simples de interpretar e evita transformar o trabalho em uma busca excessiva de hiperparâmetros. No entanto, também significa que as conclusões podem depender da configuração escolhida.
 
-Em particular, $\gamma$ controla a penalização de risco no Markowitz, enquanto $\lambda$ controla a regularização dos pesos. Valores diferentes podem gerar carteiras mais agressivas, mais conservadoras, mais concentradas ou mais diversificadas. Assim, uma estratégia que parece inferior em uma configuração pode melhorar em outra. Por isso, análises de sensibilidade são importantes para avaliar robustez.
+Em particular, $\gamma$ controla a penalização de risco no Markowitz. Valores diferentes podem gerar carteiras mais agressivas ou mais conservadoras. Assim, uma estratégia que parece inferior em uma configuração pode melhorar em outra. Por isso, análises de sensibilidade são importantes para avaliar robustez.
 
 \subsection{Custo de Transação Simplificado}
 
@@ -1303,7 +1345,7 @@ Os resultados mostram que a carteira igualmente ponderada foi extremamente compe
 % =================================================
 \chapter{Conclusão}
 
-Este trabalho apresentou uma estrutura quantitativa para combinar aprendizado de máquina e otimização de portfólios. O pipeline desenvolvido utiliza modelos supervisionados para estimar retornos esperados de ações brasileiras e aplica uma formulação regularizada de Markowitz para determinar os pesos da carteira.
+Este trabalho apresentou uma estrutura quantitativa para combinar aprendizado de máquina e otimização de portfólios. O pipeline desenvolvido utiliza modelos supervisionados para estimar retornos esperados de ações brasileiras e aplica a formulação clássica de Markowitz com restrições para determinar os pesos da carteira.
 
 A metodologia foi construída para evitar algumas armadilhas comuns em backtests financeiros. As previsões são feitas apenas com dados passados, as janelas de treino e teste não se sobrepõem, os retornos dos benchmarks são agregados na mesma frequência das estratégias, o Sharpe é anualizado de acordo com a periodicidade correta e há restrições práticas de alocação, como proibição de venda a descoberto e limite máximo por ativo.
 

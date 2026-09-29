@@ -1,5 +1,7 @@
 from config import *
 
+import os
+
 from src.data.loader import load_data
 from src.data.benchmarks import equal_weight_portfolio, ibov_returns
 from src.evaluation import report
@@ -32,10 +34,9 @@ def main():
     print("[DEBUG] Criando lista de tarefas...")
     prediction_cache = {}
     tasks = [
-        (m, gamma, lambda_reg, returns, prediction_cache)
+        (m, gamma, returns, prediction_cache)
         for m in models
         for gamma in gammas
-        for lambda_reg in lambdas
     ]
     print(f"[DEBUG] Total de tarefas: {len(tasks)}")
 
@@ -79,7 +80,9 @@ def main():
 
     # Ordena pelo índice de Sharpe (maior para menor)
     report = report.sort_values(by="Sharpe", ascending=False)
-    report.to_csv("output/tcc/performance_summary.csv", index=False)
+    output_folder = os.path.join(OUTPUT_DIR, "tcc")
+    os.makedirs(output_folder, exist_ok=True)
+    report.to_csv(os.path.join(output_folder, "performance_summary.csv"), index=False)
     
     print("\n===== PERFORMANCE =====\n")
     print(report)

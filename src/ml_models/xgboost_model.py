@@ -10,9 +10,9 @@ from sklearn.multioutput import MultiOutputRegressor
 from src.ml_models.feature_engineering import make_supervised_dataset
 
 
-def predict(returns):
+def predict(returns, horizon=1):
     """
-    Treina XGBoost para cada ativo e retorna a previsao do proximo periodo.
+    Treina XGBoost para prever a media diaria no horizonte informado.
     """
 
     try:
@@ -23,7 +23,7 @@ def predict(returns):
             "instalada. Rode: pip install -r requirements.txt"
         ) from exc
 
-    X_train, y_train, X_test = make_supervised_dataset(returns)
+    X_train, y_train, X_test = make_supervised_dataset(returns, horizon)
 
     base_model = XGBRegressor(
         objective="reg:squarederror",

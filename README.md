@@ -26,7 +26,7 @@ precos historicos
 -> retornos dos ativos
 -> previsao de retorno esperado
 -> estimacao de covariancia
--> otimizacao de Markowitz regularizada
+-> otimizacao classica de Markowitz com restricoes
 -> backtest
 -> metricas e graficos
 ```
@@ -35,9 +35,9 @@ precos historicos
 
 1. Coleta precos historicos via Yahoo Finance.
 2. Calcula retornos dos ativos.
-3. Treina modelos para prever retornos esperados.
+3. Treina modelos para prever o retorno diario medio dos proximos 21 pregoes.
 4. Estima a matriz de covariancia com Ledoit-Wolf.
-5. Resolve uma carteira de Markowitz com restricoes e regularizacao.
+5. Resolve uma carteira de Markowitz com restricoes long-only e limite de peso.
 6. Simula a estrategia em janelas de treino e teste.
 7. Compara desempenho por Sharpe, retorno acumulado, drawdown e erro de previsao.
 
@@ -58,22 +58,19 @@ models = [
     "xgboost",
 ]
 gammas = [5]
-lambdas = [0.1]
 ```
 
 Isso gera 7 estrategias baseadas em Markowitz, alem dos benchmarks
 `equal_weight` e `ibov`, deixando a analise mais interpretavel para o TCC.
 
-Para analises de robustez, pode-se rodar uma grade maior:
+Para analises de robustez, pode-se testar diferentes valores de aversao ao risco:
 
 ```python
 gammas = [1, 5, 10]
-lambdas = [0.01, 0.1, 1]
 ```
 
-Essa grade maior permite avaliar sensibilidade a aversao a risco e
-regularizacao sem transformar o experimento principal em uma busca extensa de
-hiperparametros.
+Essa grade permite avaliar a sensibilidade dos pesos ao parametro de aversao
+a risco, sem regularizacao adicional dos pesos.
 
 ## Estrutura
 
@@ -93,6 +90,9 @@ src/visualization/           # graficos finais
 ```bash
 python main.py
 ```
+
+O comando deve ser executado na raiz do projeto. Ele grava a tabela de
+desempenho e os graficos em `output/tcc/`.
 
 ## Dependencias
 
