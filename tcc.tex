@@ -276,22 +276,20 @@ i=1,\ldots,N
 \right\}.
 \end{equation}
 
-As condições de otimalidade de Karush-Kuhn-Tucker caracterizam essa solução. Sejam $\eta$ o multiplicador associado à restrição de orçamento, $\alpha_i\geq0$ os multiplicadores associados às restrições $w_i\geq0$ e $\beta_i\geq0$ os multiplicadores associados às restrições $w_i\leq0.15$. Para uma solução ótima $\mathbf{w}^{*}$, valem:
+A solução ótima pode ser interpretada como o equilíbrio entre retorno esperado e risco penalizado pelas restrições de carteira. O objetivo é maximizar a expressão
+
+\begin{equation}
+\mathbf{w}^{T}\hat{\boldsymbol{\mu}} - \gamma\mathbf{w}^{T}\hat{\Sigma}\mathbf{w},
+\end{equation}
+
+sujeita a:
 
 \begin{align}
-\hat{\boldsymbol{\mu}}
--2\gamma\hat{\Sigma}\mathbf{w}^{*}
--\eta\mathbf{1}
-+\boldsymbol{\alpha}
--\boldsymbol{\beta}
-&=0, \\
-\mathbf{1}^{T}\mathbf{w}^{*} &= 1, \\
-0\leq w_i^{*} &\leq 0.15,\quad i=1,\ldots,N, \\
-\alpha_i w_i^{*} &= 0,\quad i=1,\ldots,N, \\
-\beta_i(0.15-w_i^{*}) &= 0,\quad i=1,\ldots,N.
+\mathbf{1}^{T}\mathbf{w} &= 1, \\
+0 \leq w_i &\leq 0.15, \quad i=1,\ldots,N.
 \end{align}
 
-Essas equações mostram que, no ótimo, o ganho marginal de aumentar o peso de um ativo é equilibrado pela penalização de risco e pelas restrições ativas. Quando um ativo recebe peso zero, a condição de complementaridade permite que $\alpha_i>0$; quando um ativo atinge o limite de 15\%, permite que $\beta_i>0$. Como o problema contém restrições de caixa e de limite superior, a solução geral não é dada por uma única expressão fechada simples. Na implementação, ela é obtida numericamente por programação convexa, retornando o vetor $\mathbf{w}^{*}$ que satisfaz essas condições.
+Nesse problema, o termo $\mathbf{w}^{T}\hat{\boldsymbol{\mu}}$ favorece carteiras com maiores retornos esperados, enquanto o termo $\gamma\mathbf{w}^{T}\hat{\Sigma}\mathbf{w}$ penaliza a variância. As restrições garantem que a soma dos pesos seja igual a 1 e que cada ativo tenha peso limitado entre 0 e 15\%. Como o problema contém restrições de orçamento e de limite por ativo, a solução geral não é dada por uma expressão fechada simples. Na implementação, ela é obtida numericamente por programação convexa, retornando o vetor $\mathbf{w}^{*}$ que satisfaz essas condições.
 
 \section{Estimação da Matriz de Covariância}
 
@@ -751,23 +749,51 @@ sujeito a $\sum_i w_{i,t}=1$, $w_{i,t}\geq 0$ e $w_{i,t}\leq 0.15$. O primeiro t
 
 \section{Algoritmo do Backtest}
 
-O backtest é uma simulação histórica, feita como se a estratégia estivesse sendo executada ao longo do tempo sem conhecer antecipadamente os dados futuros. A janela é móvel, isto é, após cada avaliação ela avança 21 pregões. Em cada etapa:
+O backtest é uma simulação histórica, feita como se a estratégia estivesse sendo executada ao longo do tempo sem conhecer antecipadamente os dados futuros. Seja $R$ a matriz de retornos diários, com $N$ colunas (ativos) e uma linha por pregão. Para a etapa $t$, define-se o índice inicial da janela de teste como $i_t=253+21t$, para $t=0,1,2,\ldots$. Aqui, os pregões são numerados a partir de 1; assim, a primeira janela de treino corresponde aos pregões 1 a 252 e o primeiro teste aos pregões 253 a 273. Os parâmetros são $L=252$ pregões para treino e $H=21$ pregões para teste. Assim, em cada etapa:
 
 \begin{enumerate}
-    \item seleciona-se uma janela de treino com 252 pregões;
-    \item constroem-se as variáveis explicativas;
-    \item treina-se o modelo preditivo;
-    \item prevê-se a média diária de retorno de cada ativo para os 21 pregões seguintes;
-    \item estima-se a matriz de covariância $\hat{\Sigma}$ com Ledoit-Wolf;
-    \item resolve-se a otimização clássica de Markowitz com restrições;
-    \item aplica-se a carteira nos mesmos 21 pregões previstos;
-    \item registra-se o retorno composto da carteira;
-    \item desloca-se a janela para o próximo período.
+    \item selecionam-se as linhas de treino $i_t-L,\ldots,i_t-1$ de $R$, formadas pelos 252 pregões imediatamente anteriores ao teste;
+    \item selecionam-se as linhas de teste $i_t,\ldots,i_t+H-1$ de $R$, formadas pelos 21 pregões seguintes, sem incluí-los na estimação da carteira;
+    \item calculam-se as variáveis explicativas com os retornos disponíveis até o último pregão de treino e, para os modelos supervisionados, ajusta-se o modelo usando apenas exemplos de treino com alvo futuro completo;
+    \item obtém-se um retorno diário médio previsto para cada ativo no horizonte de 21 pregões;
+    \item estima-se a matriz de covariância diária $\hat{\Sigma}_t$ com os retornos da janela de treino;
+    \item resolve-se a otimização de Markowitz e obtém-se o vetor de pesos $\mathbf{w}_t$;
+    \item mantêm-se esses pesos nos 21 pregões de teste, calculando o retorno efetivo da carteira;
+    \item registram-se o retorno do bloco, a previsão, a média observada dos ativos e os pesos;
+    \item avança-se 21 pregões: a janela de treino continua com 252 observações, removendo as 21 mais antigas e incorporando as 21 observações que acabaram de ser teste.
 \end{enumerate}
 
 Em termos práticos, o programa não treina um único modelo em toda a amostra e depois mede seu ajuste nos mesmos dados. Ele repete o ciclo treino--previsão--carteira--teste em cada data de rebalanceamento. Isso produz uma sequência de avaliações fora da amostra: em cada uma, a carteira é formada somente com o histórico anterior à janela de teste. O procedimento completo é implementado em \texttt{src/backtesting/engine.py}; os parâmetros das janelas são definidos em \texttt{config.py}.
 
 O índice de início da janela de teste avança em passos de 21 observações. Por isso, os blocos de teste consecutivos não se sobrepõem entre si. A janela de treino tem 252 observações diárias e é deslocada junto com o calendário, em vez de crescer indefinidamente. Esse desenho faz com que a estimativa use aproximadamente o último ano de pregões, permitindo que períodos mais antigos deixem de influenciar diretamente as decisões mais recentes.
+
+Na implementação, o laço avança enquanto $i < n-H$, em que $n$ é o número total de observações e $i$ é o índice da primeira linha do teste na indexação do Python, que começa em zero. Como o limite é exclusivo e o passo é de 21 observações, uma janela que começasse exatamente em $i=n-H$ não seria processada; dependendo do alinhamento, podem restar até 21 observações no fim da série sem avaliação. Essa é a condição de parada usada pelo código atual.
+
+\subsection{Previsões e médias recalculadas a cada etapa}
+
+É importante distinguir três quantidades que são médias, mas têm usos diferentes. A primeira é a média histórica prevista pelo modelo baseline. Na etapa $t$, para cada ativo $j$, ela é calculada como
+
+\begin{equation}
+\hat{\mu}_{j,t}^{\,\mathrm{hist}}
+=
+\frac{1}{L}\sum_{s=i_t-L}^{i_t-1} r_{j,s},
+\qquad L=252.
+\end{equation}
+
+Portanto, não se calcula uma única média para todo o período do estudo nem se repete a média da primeira etapa. Ela é recalculada em cada rebalanceamento usando os 252 retornos diários da janela de treino então vigente. Como essa janela avança 21 pregões, a média seguinte deixa de incluir os 21 retornos mais antigos e passa a incluir os 21 retornos mais recentes que já foram observados. Esse baseline gera um valor por ativo, que é usado como previsão de retorno diário médio dos 21 pregões de teste.
+
+Nos modelos supervisionados, a previsão também é atualizada em cada rebalanceamento, mas não é simplesmente a média dos 252 retornos. O modelo é ajustado novamente à janela de treino, usando atributos históricos e alvos definidos como médias dos 21 retornos seguintes dentro dessa janela. Em seguida, recebe as features calculadas até o último pregão do treino e produz $\hat{\mu}_{j,t}$, a previsão de retorno diário médio para cada ativo no bloco de teste seguinte. As features incluem retornos defasados, média móvel e desvio-padrão móvel; a padronização, quando usada, é ajustada somente com as features de treino. Assim, uma previsão de uma etapa não é carregada para a próxima: o modelo e sua previsão são atualizados com a nova janela. O cache opcional do programa apenas reutiliza o resultado quando se solicita novamente a previsão do mesmo modelo para a mesma janela; não reutiliza a previsão em uma janela temporal diferente.
+
+A média observada no teste é calculada separadamente e serve para avaliar as previsões, não para escolher os pesos daquela etapa. Para cada ativo $j$, ela é:
+
+\begin{equation}
+\bar{r}_{j,t}^{\,\mathrm{teste}}
+=
+\frac{1}{H}\sum_{s=i_t}^{i_t+H-1} r_{j,s},
+\qquad H=21.
+\end{equation}
+
+Essa média só pode ser calculada depois que os 21 pregões de teste ocorreram. Ela é comparada com $\hat{\mu}_{j,t}$ nas métricas de erro e de acurácia direcional. Em contraste, o retorno financeiro da carteira não é essa média simples: usa os mesmos pesos fixos $\mathbf{w}_t$ em cada dia e compõe os retornos diários ao longo do bloco, conforme a próxima subseção. Portanto, a média dos retornos dos ativos é usada para avaliar a previsão; o retorno composto da carteira é usado para avaliar o resultado financeiro.
 
 \subsection{Retorno observado e custos}
 
